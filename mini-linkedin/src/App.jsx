@@ -9,6 +9,8 @@ import Notifications from './routes/Notifications'
 import Settings from './routes/Settings'
 import Login from './routes/Login'
 import useAuth from './store/useAuth'
+import EditProfile from './routes/EditProfile'  
+
 
 // NOVO: importar a página pública de perfil
 import Perfil from './pages/Perfil'
@@ -58,6 +60,14 @@ export default function App() {
         }
       />
       <Route
+        path="/profile/:id/edit"
+        element={
+          <PrivateLayout>
+            <EditProfile />
+          </PrivateLayout>
+        }
+      />
+      <Route
         path="/jobs"
         element={
           <PrivateLayout>
@@ -93,7 +103,7 @@ export default function App() {
       {/* ROTAS PÚBLICAS */}
       <Route path="/login" element={<Login />} />
       <Route path="/perfil/:uid" element={<Perfil />} />
-      
+
 
 
       {/* QUALQUER OUTRA ROTA REDIRECIONA */}

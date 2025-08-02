@@ -1,42 +1,190 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+/* Fonte Inter */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #f9fafb; /* cinza clarinho */
+  color: #1f2937; /* cinza escuro */
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+/* Container principal */
+.profile-container {
+  background: white;
+  max-width: 900px;
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+  padding: 32px;
+  box-sizing: border-box;
+}
+
+/* Header com foto e botão */
+.profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+/* Foto círculo com inicial */
+.profile-avatar {
+  width: 112px;
+  height: 112px;
+  background-color: #3b82f6; /* azul claro */
+  border-radius: 50%;
+  color: #1e40af; /* azul escuro */
+  font-weight: 800;
+  font-size: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+/* Nome e email */
+.profile-name-email {
+  flex: 1;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.profile-name {
+  font-size: 2.25rem; /* 36px */
+  font-weight: 800;
+  margin: 10px 0 4px;
+  color: #111827;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.profile-email {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+/* Botão editar */
+.button-primary {
+  background-color: #2563eb; /* azul padrão */
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+  transition: background-color 0.3s ease;
+  white-space: nowrap;
 }
 
-.card {
-  padding: 2em;
+.button-primary:hover {
+  background-color: #1d4ed8;
 }
 
-.read-the-docs {
-  color: #888;
+/* Seções */
+.section {
+  margin-top: 40px;
+}
+
+.section h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  border-bottom: 2px solid #d1d5db; /* cinza claro */
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+  color: #111827;
+}
+
+/* Textos das seções */
+.section p,
+.section ul {
+  font-size: 1rem;
+  color: #374151;
+  line-height: 1.6;
+}
+
+/* Lista com marcadores */
+.section ul {
+  list-style: disc inside;
+  padding-left: 0;
+  margin: 0;
+}
+
+/* Tags skills */
+.skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.skill-badge {
+  background-color: #bfdbfe; /* azul clarinho */
+  color: #1e40af; /* azul escuro */
+  padding: 6px 14px;
+  border-radius: 9999px; /* oval */
+  font-weight: 600;
+  font-size: 0.875rem;
+  user-select: none;
+}
+
+/* Form de edição */
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #374151;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.3s ease;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 6px #93c5fd;
+}
+
+.form-textarea {
+  min-height: 100px;
+}
+
+/* Botões do form */
+.form-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.button-secondary {
+  background-color: #e5e7eb; /* cinza claro */
+  color: #374151;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s ease;
+}
+
+.button-secondary:hover {
+  background-color: #d1d5db;
 }
