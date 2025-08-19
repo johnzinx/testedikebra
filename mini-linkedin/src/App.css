@@ -12,6 +12,90 @@ body {
   align-items: center;
   padding: 20px;
 }
+/* navbar padrão */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: #ffffff;
+  color: #222;
+  border-bottom: 1px solid #ddd;
+}
+
+.navbar .brand {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #0073b1;
+  text-decoration: none;
+}
+
+.navbar nav a {
+  margin: 0 10px;
+  color: #444;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.navbar nav a:hover {
+  color: #0073b1;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #0073b1;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.dark-toggle {
+  font-size: 1.2rem;
+  cursor: pointer;
+  background: transparent;
+}
+
+/* modo escuro */
+body.dark-mode {
+  background: #18191a;
+  color: #f1f1f1;
+}
+
+body.dark-mode .navbar {
+  background: #242526;
+  color: #f1f1f1;
+  border-bottom: 1px solid #3a3b3c;
+}
+
+body.dark-mode .navbar .brand {
+  color: #61dafb;
+}
+
+body.dark-mode .navbar nav a {
+  color: #ddd;
+}
+
+body.dark-mode .navbar nav a:hover {
+  color: #61dafb;
+}
+
+body.dark-mode .user span {
+  color: #f1f1f1;
+}
+
+
 
 /* Container principal */
 .profile-container {

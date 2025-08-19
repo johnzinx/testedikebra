@@ -1,18 +1,34 @@
 import { Link, useNavigate } from 'react-router-dom'
 import useAuth from '../store/useAuth'
+import { useEffect, useState } from 'react'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const [darkMode, setDarkMode] = useState(false)
 
   const handleLogout = () => {
     logout()
     navigate('/login')
   }
 
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode)
+    document.body.classList.toggle('dark-mode')
+  }
+
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-mode')
+    } else {
+      document.body.classList.remove('dark-mode')
+    }
+  }, [darkMode])
+
   return (
     <header className="navbar">
       <Link to="/feed" className="brand">miniLinkedIn</Link>
+
       <nav>
         <Link to="/feed">Feed</Link>
         <Link to={`/profile/${user?.id}`}>Perfil</Link>
@@ -21,7 +37,12 @@ export default function Navbar() {
         <Link to="/notifications">Notificações</Link>
         <Link to="/settings">Configurações</Link>
       </nav>
+
       <div className="user">
+        <button onClick={toggleDarkMode} className="dark-toggle">
+          {darkMode ? '☀️' : '🌙'}
+        </button>
+
         {user && (
           <>
             <img src={user.avatar} alt={user.name} className="avatar" />
