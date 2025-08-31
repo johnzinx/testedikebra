@@ -1,228 +1,219 @@
-import { useEffect, useState } from 'react'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { db } from '../services/firebase'
-import useAuth from '../store/useAuth'
+import { useEffect, useState } from 'react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../services/firebase';
+import useAuth from '../store/useAuth';
 
 export default function Profile() {
-  const { user } = useAuth()
-  const [perfil, setPerfil] = useState(null)
-  const [carregando, setCarregando] = useState(true)
-  const [editando, setEditando] = useState(false)
-
-  // Estados para edição
-  const [nomeEdit, setNomeEdit] = useState('')
-  const [bioEdit, setBioEdit] = useState('')
-  const [experienciasEdit, setExperienciasEdit] = useState('')
-  const [skillsEdit, setSkillsEdit] = useState('')
+  const { user } = useAuth();
+  const [perfil, setPerfil] = useState({
+    nome: '',
+    telefone: '',
+    email: '',
+    senha: '',
+    dataNascimento: '',
+  });
+  const [carregando, setCarregando] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   useEffect(() => {
-    if (!user) return
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
+  useEffect(() => {
+    if (!user) {
+      setCarregando(false);
+      return;
+    }
     const buscarPerfil = async () => {
       try {
-        const docRef = doc(db, 'users', user.uid)
-        const docSnap = await getDoc(docRef)
+        const docRef = doc(db, 'users', user.uid);
+        const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          const data = { ...docSnap.data(), uid: user.uid }
-          setPerfil(data)
-
-          // Preenche os estados de edição
-          setNomeEdit(data.nome || '')
-          setBioEdit(data.bio || '')
-          setExperienciasEdit((data.experiencias || []).join(', '))
-          setSkillsEdit((data.skills || []).join(', '))
+          setPerfil({
+            ...docSnap.data(),
+            email: user.email,
+          });
         } else {
-          setPerfil(null)
+          setPerfil({ email: user.email });
         }
       } catch (error) {
-        console.error(error)
-        setPerfil(null)
+        console.error(error);
       } finally {
-        setCarregando(false)
+        setCarregando(false);
       }
-    }
+    };
+    buscarPerfil();
+  }, [user]);
 
-    buscarPerfil()
-  }, [user])
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setPerfil((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+    try {
+      const docRef = doc(db, 'users', user.uid);
+      await setDoc(docRef, perfil, { merge: true });
+      console.log('Perfil atualizado com sucesso!');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Erro ao salvar o perfil:', error);
+    }
+  };
+
+  const containerWidth = windowWidth > 768 ? '28rem' : '90%';
 
   if (carregando)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-gray-600 text-lg animate-pulse">Carregando perfil...</p>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ECECEC' }}>
+        <p style={{ color: '#2C3E50', fontSize: '1.125rem', animation: 'pulse 2s infinite' }}>Carregando perfil...</p>
       </div>
-    )
+    );
 
-  if (!perfil)
+  // --- Tela de visualização do perfil ---
+  if (!isEditing) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-red-500 text-lg font-semibold">Perfil não encontrado.</p>
-      </div>
-    )
-
-  const salvarPerfil = async () => {
-    try {
-      const docRef = doc(db, 'users', user.uid)
-      const experienciasArray = experienciasEdit
-        .split(',')
-        .map((e) => e.trim())
-        .filter((e) => e.length > 0)
-
-      const skillsArray = skillsEdit
-        .split(',')
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0)
-
-      const novoPerfil = {
-        ...perfil,
-        nome: nomeEdit,
-        bio: bioEdit,
-        experiencias: experienciasArray,
-        skills: skillsArray,
-      }
-
-      await setDoc(docRef, novoPerfil)
-      setPerfil(novoPerfil)
-      setEditando(false)
-    } catch (error) {
-      console.error('Erro ao salvar perfil:', error)
-    }
-  }
-
-  if (editando) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="max-w-2xl w-full bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold mb-6 text-gray-800 border-b pb-2">Editar Perfil</h1>
-
-          <label className="block mb-5">
-            <span className="text-gray-700 font-semibold">Nome</span>
-            <input
-              type="text"
-              value={nomeEdit}
-              onChange={(e) => setNomeEdit(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2
-                         placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Seu nome"
-            />
-          </label>
-
-          <label className="block mb-5">
-            <span className="text-gray-700 font-semibold">Bio</span>
-            <textarea
-              value={bioEdit}
-              onChange={(e) => setBioEdit(e.target.value)}
-              rows={4}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2
-                         placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              placeholder="Conte um pouco sobre você"
-            />
-          </label>
-
-          <label className="block mb-5">
-            <span className="text-gray-700 font-semibold">Experiências (separe por vírgula)</span>
-            <input
-              type="text"
-              value={experienciasEdit}
-              onChange={(e) => setExperienciasEdit(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2
-                         placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Ex: Dev Frontend, Designer, Gerente"
-            />
-          </label>
-
-          <label className="block mb-8">
-            <span className="text-gray-700 font-semibold">Skills (separe por vírgula)</span>
-            <input
-              type="text"
-              value={skillsEdit}
-              onChange={(e) => setSkillsEdit(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2
-                         placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Ex: React, Node.js, Photoshop"
-            />
-          </label>
-
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => setEditando(false)}
-              className="px-5 py-2 rounded-md bg-gray-300 text-gray-700 hover:bg-gray-400 transition"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={salvarPerfil}
-              className="px-5 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
-            >
-              Salvar
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="max-w-3xl w-full bg-white rounded-lg shadow-lg p-8">
-        <div className="flex items-center justify-between gap-6">
-          <div className="flex flex-col items-center text-center">
-            {/* Foto placeholder circular */}
-            <div className="w-28 h-28 bg-blue-200 rounded-full flex items-center justify-center text-4xl font-bold text-blue-700 select-none">
-              {perfil.nome ? perfil.nome[0].toUpperCase() : '?'}
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '1rem', paddingBottom: '1rem', backgroundColor: '#ECECEC' }}>
+        <div style={{ width: containerWidth, backgroundColor: '#ECECEC', borderRadius: '1.5rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', padding: '1.5rem', marginTop: '4rem', position: 'relative' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '1.5rem', color: '#000' }}>Perfil</h2>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem', position: 'relative' }}>
+            <div style={{ width: '8rem', height: '8rem', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#E6E69D', position: 'relative' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="#D9D9D9">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.93 0 3.5 1.57 3.5 3.5S13.93 12 12 12s-3.5-1.57-3.5-3.5S10.07 5 12 5zm0 14.9c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+              </svg>
             </div>
-
-            <h1 className="mt-4 text-3xl font-extrabold text-gray-900">{perfil.nome}</h1>
-            <p className="text-gray-600">{perfil.email}</p>
+            <button
+              onClick={() => setIsEditing(true)}
+              style={{ position: 'absolute', bottom: '0', right: '50%', transform: 'translateX(50%)', width: '2rem', height: '2rem', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', cursor: 'pointer', backgroundColor: '#E6E69D', border: 'none' }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style={{ color: '#000' }}>
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-7.586 5.586L3 17.172v-4.145l6.5-6.5L13.172 8l-6.5 6.5z" />
+              </svg>
+            </button>
           </div>
 
-          {user?.uid === perfil.uid && (
-            <button
-              onClick={() => setEditando(true)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700
-                         shadow-md transition font-semibold"
-            >
-              Editar Perfil
-            </button>
-          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ padding: '0.75rem', borderRadius: '9999px', border: '1px solid #D9D9D9', backgroundColor: '#fff', color: '#000', textAlign: 'center' }}>
+              {perfil.nome || 'Nome e sobrenome não informados'}
+            </div>
+            <div style={{ padding: '0.75rem', borderRadius: '9999px', border: '1px solid #D9D9D9', backgroundColor: '#fff', color: '#000', textAlign: 'center' }}>
+              {perfil.telefone || 'Telefone não informado'}
+            </div>
+            <div style={{ padding: '0.75rem', borderRadius: '9999px', border: '1px solid #D9D9D9', backgroundColor: '#fff', color: '#000', textAlign: 'center' }}>
+              {perfil.email || 'Email não informado'}
+            </div>
+            <div style={{ padding: '0.75rem', borderRadius: '9999px', border: '1px solid #D9D9D9', backgroundColor: '#fff', color: '#000', textAlign: 'center' }}>
+              {perfil.dataNascimento || 'Data de nascimento não informada'}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Tela de edição do perfil ---
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '1rem', paddingBottom: '1rem', backgroundColor: '#ECECEC' }}>
+      <div style={{ width: containerWidth, backgroundColor: '#ECECEC', borderRadius: '1.5rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.06)', padding: '1.5rem', marginTop: '4rem', position: 'relative' }}>
+        <button
+          onClick={() => setIsEditing(false)}
+          style={{ position: 'absolute', left: '1rem', top: '1rem', width: '2.5rem', height: '2.5rem', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#D9D9D9', border: 'none', cursor: 'pointer' }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: '#000' }}>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </button>
+
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '1.5rem', color: '#000' }}>Editar perfil</h2>
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem', position: 'relative' }}>
+          <div style={{ width: '8rem', height: '8rem', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#E6E69D', position: 'relative' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="#D9D9D9">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.93 0 3.5 1.57 3.5 3.5S13.93 12 12 12s-3.5-1.57-3.5-3.5S10.07 5 12 5zm0 14.9c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            </svg>
+          </div>
+          <div style={{ position: 'absolute', bottom: '0', right: '50%', transform: 'translateX(50%)', width: '2rem', height: '2rem', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', cursor: 'pointer', backgroundColor: '#E6E69D' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style={{ color: '#000' }}>
+              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-7.586 5.586L3 17.172v-4.145l6.5-6.5L13.172 8l-6.5 6.5z" />
+            </svg>
+          </div>
         </div>
 
-        <section className="mt-10">
-          <h2 className="text-2xl font-bold mb-3 border-b border-gray-300 pb-1">Bio</h2>
-          <p className="text-gray-700 leading-relaxed">{perfil.bio || 'Sem bio ainda.'}</p>
-        </section>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <input
+            type="text"
+            name="nome"
+            placeholder="Nome e sobrenome"
+            value={perfil.nome}
+            onChange={handleChange}
+            style={{ width: '100%', padding: '0.75rem', borderRadius: '9999px', border: '1px solid #D9D9D9', outline: 'none', backgroundColor: '#fff', color: '#000' }}
+          />
+          <input
+            type="tel"
+            name="telefone"
+            placeholder="Telefone"
+            value={perfil.telefone}
+            onChange={handleChange}
+            style={{ width: '100%', padding: '0.75rem', borderRadius: '9999px', border: '1px solid #D9D9D9', outline: 'none', backgroundColor: '#fff', color: '#000' }}
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={perfil.email}
+            onChange={handleChange}
+            style={{ width: '100%', padding: '0.75rem', borderRadius: '9999px', border: '1px solid #D9D9D9', outline: 'none', backgroundColor: '#fff', color: '#000' }}
+          />
+          <input
+            type="password"
+            name="senha"
+            placeholder="Senha"
+            value={perfil.senha}
+            onChange={handleChange}
+            style={{ width: '100%', padding: '0.75rem', borderRadius: '9999px', border: '1px solid #D9D9D9', outline: 'none', backgroundColor: '#fff', color: '#000' }}
+          />
 
-        <section className="mt-8">
-          <h2 className="text-2xl font-bold mb-3 border-b border-gray-300 pb-1">Experiências</h2>
-          {perfil.experiencias?.length ? (
-            <ul className="list-disc list-inside space-y-1 text-gray-700">
-              {perfil.experiencias.map((exp, idx) => (
-                <li key={idx}>{exp}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500 italic">Nenhuma experiência cadastrada.</p>
-          )}
-        </section>
+          <div style={{ marginTop: '0.5rem' }}>
+            <label style={{ color: '#000', marginBottom: '0.5rem', display: 'block' }}>Data de Nascimento:</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                type="text"
+                name="dataNascimento"
+                placeholder="00 / 00 / 0000"
+                value={perfil.dataNascimento}
+                onChange={handleChange}
+                style={{ width: '100%', padding: '0.75rem', borderRadius: '9999px', border: '1px solid #D9D9D9', outline: 'none', backgroundColor: '#fff', color: '#000' }}
+              />
+              <span style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#000' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </span>
+            </div>
+          </div>
+          
+          <button
+            type="button"
+            style={{ width: '100%', padding: '0.75rem', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#E6E69D', color: '#000', border: 'none', cursor: 'pointer', marginTop: '1rem' }}
+          >
+            Adicionar Currículo
+          </button>
 
-        <section className="mt-8">
-          <h2 className="text-2xl font-bold mb-3 border-b border-gray-300 pb-1">Skills</h2>
-          {perfil.skills?.length ? (
-            <ul className="flex flex-wrap gap-3">
-              {perfil.skills.map((skill, idx) => (
-                <li
-                  key={idx}
-                  className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold"
-                >
-                  {skill}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500 italic">Nenhuma skill cadastrada.</p>
-          )}
-        </section>
+          <button
+            type="button"
+            onClick={handleSave}
+            style={{ width: '100%', padding: '0.75rem', borderRadius: '9999px', fontWeight: 'bold', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', backgroundColor: '#E6E69D', color: '#000', border: 'none', cursor: 'pointer', marginTop: '1rem' }}
+          >
+            Concluir
+          </button>
+        </div>
       </div>
     </div>
-  )
+  );
 }

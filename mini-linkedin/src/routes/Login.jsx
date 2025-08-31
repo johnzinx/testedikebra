@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
 import { auth } from '../services/firebase'
- 
+
 export default function Login() {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
@@ -13,17 +13,14 @@ export default function Login() {
   const [erro, setErro] = useState(null)
   const [sucesso, setSucesso] = useState(null)
   const navigate = useNavigate()
- 
+
   const enviar = async (e) => {
     e.preventDefault()
     try {
       if (isCadastro) {
-        // Criar conta
         await createUserWithEmailAndPassword(auth, email, senha)
-        // Ações adicionais podem ser feitas aqui (salvar nome, cpf, data de nascimento em um banco, por exemplo)
         navigate('/feed')
       } else {
-        // Login
         await signInWithEmailAndPassword(auth, email, senha)
         navigate('/feed')
       }
@@ -31,7 +28,7 @@ export default function Login() {
       setErro(err.message)
     }
   }
- 
+
   const handleEsqueciSenha = async () => {
     try {
       await sendPasswordResetEmail(auth, email)
@@ -40,95 +37,194 @@ export default function Login() {
       setErro('Não foi possível enviar o e-mail de redefinição de senha.')
     }
   }
- 
+
+  // ============== ESTILOS ==============
+  const styles = {
+    page: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      minHeight: "100vh",
+      background: "url('/fundo.jpg') no-repeat center center/cover",
+      position: "relative",
+    },
+    overlay: {
+      content: "''",
+      position: "absolute",
+      inset: 0,
+      background: "rgba(0,0,0,0.45)",
+      backdropFilter: "blur(3px)",
+    },
+    card: {
+      position: "relative",
+      background: "rgba(255,255,255,0.95)",
+      padding: "32px 24px",
+      borderRadius: "20px",
+      width: "100%",
+      maxWidth: "380px",
+      boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
+      textAlign: "center",
+      zIndex: 1,
+    },
+    logo: {
+      width: "80px",
+      height: "80px",
+      borderRadius: "50%",
+      background: "#d97706",
+      margin: "0 auto 20px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontWeight: "bold",
+      color: "white",
+    },
+    title: {
+      fontSize: "1.5rem",
+      marginBottom: "20px",
+      fontWeight: "700",
+      color: "#1f2937",
+    },
+    input: {
+      width: "100%",
+      padding: "12px 14px",
+      marginBottom: "16px",
+      border: "1.5px solid #ccc",
+      borderRadius: "12px",
+      fontSize: "1rem",
+      outline: "none",
+    },
+    btn: {
+      width: "100%",
+      padding: "12px",
+      border: "none",
+      borderRadius: "12px",
+      backgroundColor: "#2563eb",
+      color: "white",
+      fontWeight: "600",
+      cursor: "pointer",
+      marginBottom: "12px",
+    },
+    or: {
+      margin: "10px 0",
+      fontSize: "0.9rem",
+      fontWeight: "600",
+      color: "#6b7280",
+    },
+    google: {
+      width: "100%",
+      padding: "12px",
+      border: "1.5px solid #ddd",
+      borderRadius: "12px",
+      backgroundColor: "white",
+      color: "#374151",
+      fontWeight: "600",
+      cursor: "pointer",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      gap: "8px",
+    },
+    linkBtn: {
+      background: "none",
+      border: "none",
+      color: "#2563eb",
+      fontWeight: "600",
+      cursor: "pointer",
+      margin: "4px 8px",
+    }
+  }
+
   return (
-    <div className="profile-container">
-      <form className="form-group" onSubmit={enviar}>
-        <h2>{isCadastro ? 'Criar conta' : 'Entrar'}</h2>
-       
-        <div className="form-group">
-          <label className="form-label">Email</label>
+    <div style={styles.page}>
+      <div style={styles.overlay}></div>
+      <div style={styles.card}>
+        <div style={styles.logo}>logo</div>
+        <h2 style={styles.title}>{isCadastro ? 'Criar Conta' : 'Entrar'}</h2>
+
+        <form onSubmit={enviar}>
           <input
             type="email"
-            className="form-input"
             placeholder="Email"
+            style={styles.input}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-        </div>
- 
-        <div className="form-group">
-          <label className="form-label">Senha</label>
+
           <input
             type="password"
-            className="form-input"
             placeholder="Senha"
+            style={styles.input}
             value={senha}
             onChange={(e) => setSenha(e.target.value)}
             required
           />
-        </div>
- 
-        {isCadastro && (
-          <>
-            <div className="form-group">
-              <label className="form-label">Nome Completo</label>
+
+          {isCadastro && (
+            <>
               <input
                 type="text"
-                className="form-input"
-                placeholder="Seu nome"
+                placeholder="Nome Completo"
+                style={styles.input}
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 required
               />
-            </div>
- 
-            <div className="form-group">
-              <label className="form-label">CPF</label>
+
               <input
                 type="text"
-                className="form-input"
-                placeholder="Seu CPF"
+                placeholder="CPF"
+                style={styles.input}
                 value={cpf}
                 onChange={(e) => setCpf(e.target.value)}
                 required
               />
-            </div>
- 
-            <div className="form-group">
-              <label className="form-label">Data de Nascimento</label>
+
               <input
                 type="date"
-                className="form-input"
+                style={styles.input}
                 value={dataNascimento}
                 onChange={(e) => setDataNascimento(e.target.value)}
                 required
               />
-            </div>
-          </>
-        )}
- 
-        {erro && <small className="muted">{erro}</small>}
-        {sucesso && <small className="success">{sucesso}</small>}
- 
-        <div className="form-buttons">
-          <button type="submit" className="button-primary">
+            </>
+          )}
+
+          {erro && <small style={{ color: "red" }}>{erro}</small>}
+          {sucesso && <small style={{ color: "green" }}>{sucesso}</small>}
+
+          <button type="submit" style={styles.btn}>
             {isCadastro ? 'Cadastrar' : 'Entrar'}
           </button>
-          <button type="button" className="button-secondary" onClick={() => setIsCadastro(!isCadastro)}>
+        </form>
+
+        <div style={styles.or}>OU</div>
+
+        <button style={styles.google}>
+          <img src="/google-icon.svg" alt="Google" width="20" />
+          Entrar com o Google
+        </button>
+
+        <div style={{ marginTop: "16px" }}>
+          <button
+            type="button"
+            style={styles.linkBtn}
+            onClick={() => setIsCadastro(!isCadastro)}
+          >
             {isCadastro ? 'Já tenho conta' : 'Quero me cadastrar'}
           </button>
- 
+
           {!isCadastro && (
-            <button type="button" className="button-secondary" onClick={handleEsqueciSenha}>
+            <button
+              type="button"
+              style={styles.linkBtn}
+              onClick={handleEsqueciSenha}
+            >
               Esqueci minha senha
             </button>
           )}
         </div>
-      </form>
+      </div>
     </div>
   )
 }
- 
- 

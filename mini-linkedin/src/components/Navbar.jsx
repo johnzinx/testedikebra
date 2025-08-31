@@ -27,7 +27,7 @@ export default function Navbar() {
 
   return (
     <header className="navbar">
-      <Link to="/feed" className="brand">miniLinkedIn</Link>
+      <Link to="/feed" className="brand">DiK</Link>
 
       <nav>
         <Link to="/feed">Feed</Link>

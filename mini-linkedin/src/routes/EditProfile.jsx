@@ -48,16 +48,52 @@ export default function EditProfile() {
     navigate(`/profile/${id}`)
   }
 
-  if (loading) return <p>Carregando dados...</p>
+  if (loading) return <p className="text-center text-gray-600">Carregando dados...</p>
 
   return (
-    <div className="max-w-xl mx-auto p-4 space-y-4">
-      <h2 className="text-xl font-bold">Editar Perfil</h2>
-      <input name="nome" value={form.nome} onChange={handleChange} className="w-full p-2 border" placeholder="Nome" />
-      <textarea name="bio" value={form.bio} onChange={handleChange} className="w-full p-2 border" placeholder="Bio" />
-      <input name="skills" value={form.skills} onChange={handleChange} className="w-full p-2 border" placeholder="Skills (separadas por vírgula)" />
-      <input name="experiencias" value={form.experiencias} onChange={handleChange} className="w-full p-2 border" placeholder="Experiências (separadas por vírgula)" />
-      <button onClick={salvar} className="bg-blue-500 text-white px-4 py-2 rounded">Salvar</button>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="bg-white shadow-lg rounded-2xl w-full max-w-lg p-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Editar Perfil</h2>
+
+        <div className="space-y-4">
+          <input
+            name="nome"
+            value={form.nome}
+            onChange={handleChange}
+            className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Nome"
+          />
+          <textarea
+            name="bio"
+            value={form.bio}
+            onChange={handleChange}
+            rows="4"
+            className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            placeholder="Bio"
+          />
+          <input
+            name="skills"
+            value={form.skills}
+            onChange={handleChange}
+            className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Skills (separadas por vírgula)"
+          />
+          <input
+            name="experiencias"
+            value={form.experiencias}
+            onChange={handleChange}
+            className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Experiências (separadas por vírgula)"
+          />
+        </div>
+
+        <button
+          onClick={salvar}
+          className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-md"
+        >
+          Salvar
+        </button>
+      </div>
     </div>
   )
 }
