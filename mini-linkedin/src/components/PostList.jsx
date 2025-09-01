@@ -48,32 +48,78 @@ export default function PostList() {
 
   const deletarPost = async (postId) => {
     const postRef = doc(db, 'posts', postId)
-    if (confirm('Tem certeza que quer deletar esse post?')) {
+    if (window.confirm('Tem certeza que quer deletar esse post?')) {
+      // Como o onSnapshot já está ativo, a exclusão será refletida automaticamente.
+      // Basta chamar a função delete()
       await postRef.delete()
     }
   }
 
   return (
-    <div className="space-y-4">
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '1rem'
+    }}>
       {posts.map(post => {
         const curtiu = post.curtidas?.includes(user.uid)
         return (
-          <div key={post.id} className="bg-white p-4 rounded shadow">
-            <div className="text-sm text-gray-600">{post.autor.nome || post.autor.email}</div>
-            <p className="mt-1 text-gray-800">{post.texto}</p>
+          <div
+            key={post.id}
+            style={{
+              backgroundColor: 'white',
+              padding: '1rem',
+              borderRadius: '0.5rem',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            }}
+          >
+            <div style={{
+              fontSize: '0.875rem',
+              color: '#4b5563'
+            }}>
+              {post.autor.nome || post.autor.email}
+            </div>
+            <p style={{
+              marginTop: '0.25rem',
+              color: '#1f2937'
+            }}>
+              {post.texto}
+            </p>
 
             {/* Botões */}
-            <div className="flex items-center gap-4 mt-3">
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+              marginTop: '0.75rem'
+            }}>
               <button
                 onClick={() => curtirPost(post.id, post.curtidas || [])}
-                className={`text-sm ${curtiu ? 'text-blue-600' : 'text-gray-500'}`}
+                style={{
+                  fontSize: '0.875rem',
+                  color: curtiu ? '#2563eb' : '#6b7280',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  transition: 'color 0.2s',
+                  fontWeight: 'bold'
+                }}
               >
                 👍 Curtir ({post.curtidas?.length || 0})
               </button>
 
               <button
                 onClick={() => setComentando(prev => ({ ...prev, [post.id]: !prev[post.id] }))}
-                className="text-sm text-gray-500"
+                style={{
+                  fontSize: '0.875rem',
+                  color: '#6b7280',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  transition: 'color 0.2s',
+                }}
               >
                 💬 Comentar
               </button>
@@ -81,7 +127,15 @@ export default function PostList() {
               {user.uid === post.autor.uid && (
                 <button
                   onClick={() => deletarPost(post.id)}
-                  className="text-sm text-red-500"
+                  style={{
+                    fontSize: '0.875rem',
+                    color: '#ef4444',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: 0,
+                    transition: 'color 0.2s',
+                  }}
                 >
                   🗑️ Excluir
                 </button>
@@ -90,18 +144,36 @@ export default function PostList() {
 
             {/* Comentário */}
             {comentando[post.id] && (
-              <div className="mt-2">
+              <div style={{ marginTop: '0.5rem' }}>
                 <input
                   value={textoComentario[post.id] || ''}
                   onChange={(e) =>
                     setTextoComentario(prev => ({ ...prev, [post.id]: e.target.value }))
                   }
                   placeholder="Escreva um comentário"
-                  className="border rounded p-1 w-full"
+                  style={{
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '0.25rem',
+                    padding: '0.25rem',
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    outline: 'none',
+                  }}
                 />
                 <button
                   onClick={() => comentarPost(post.id)}
-                  className="mt-1 text-sm bg-gray-200 px-2 py-1 rounded"
+                  style={{
+                    marginTop: '0.25rem',
+                    fontSize: '0.875rem',
+                    backgroundColor: '#e5e7eb',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '0.25rem',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s',
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#d1d5db'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#e5e7eb'}
                 >
                   Enviar
                 </button>
@@ -109,11 +181,23 @@ export default function PostList() {
             )}
 
             {/* Lista de comentários */}
-            {post.comentarios?.map((c, i) => (
-              <div key={i} className="mt-2 text-sm text-gray-700 border-t pt-1">
-                <strong>{c.nome}: </strong> {c.texto}
+            {post.comentarios?.length > 0 && (
+              <div style={{
+                marginTop: '0.5rem',
+                borderTop: '1px solid #e2e8f0',
+                paddingTop: '0.5rem'
+              }}>
+                {post.comentarios?.map((c, i) => (
+                  <div key={i} style={{
+                    marginTop: '0.5rem',
+                    fontSize: '0.875rem',
+                    color: '#374151'
+                  }}>
+                    <strong>{c.nome}: </strong> {c.texto}
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         )
       })}

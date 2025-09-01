@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import useAuth from '../store/useAuth';
 import { useEffect, useState } from 'react';
+import { FiMenu, FiX, FiUser, FiHome, FiBriefcase, FiMessageCircle, FiBell, FiSettings } from 'react-icons/fi';
 
 export default function Sidebar() {
   const { user } = useAuth();
@@ -12,43 +13,39 @@ export default function Sidebar() {
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
+    if (windowWidth > breakpoint) {
+      setIsMenuOpen(false);
+    }
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [windowWidth]);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
   const styles = {
-    // Container principal que lida com o layout de duas colunas em telas grandes
-    mainContainer: {
-      display: 'flex',
-      minHeight: '100vh',
-      backgroundColor: '#f3f4f6',
-    },
-    // Botão de menu que aparece no canto superior esquerdo em telas pequenas
     openMenuButton: {
       position: 'fixed',
-      top: '1rem',
-      left: '1rem',
+      top: '0.5rem', // Posição superior
+      left: '0.5rem', // Posição esquerda
       zIndex: 11,
       cursor: 'pointer',
       backgroundColor: '#E53E3E',
       color: 'white',
       border: 'none',
       borderRadius: '50%',
-      width: '40px',
-      height: '40px',
+      width: '44px', // Menor
+      height: '44px', // Menor
       display: windowWidth <= breakpoint ? 'flex' : 'none',
       alignItems: 'center',
       justifyContent: 'center',
       boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+      transition: 'transform 0.2s ease',
     },
-    // Estilos da barra lateral
     sidebar: {
       backgroundColor: '#E53E3E',
-      width: windowWidth > breakpoint ? '250px' : '85vw',
-      maxWidth: '400px',
+      width: windowWidth > breakpoint ? '250px' : '80vw', // Largura menor
+      maxWidth: '300px', // Menor
       height: '100vh',
       position: 'fixed',
       top: 0,
@@ -57,53 +54,54 @@ export default function Sidebar() {
       transition: 'transform 0.3s ease-in-out',
       zIndex: 10,
       boxShadow: '2px 0 5px rgba(0,0,0,0.2)',
-      padding: '1.5rem 1rem',
+      padding: '1rem', // Padding reduzido
       display: 'flex',
       flexDirection: 'column',
-      borderTopRightRadius: '30px',
-      borderBottomRightRadius: '30px',
+      borderTopRightRadius: windowWidth > breakpoint ? '0px' : '20px', // Menor
+      borderBottomRightRadius: windowWidth > breakpoint ? '0px' : '20px', // Menor
+      overflowY: 'auto',
     },
-    // Botão de fechar que aparece no canto superior esquerdo da sidebar em mobile
     closeMenuButton: {
       cursor: 'pointer',
       color: 'white',
-      width: '32px',
-      height: '32px',
+      width: '36px', // Menor
+      height: '36px', // Menor
       display: windowWidth <= breakpoint ? 'flex' : 'none',
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: 'rgba(255, 255, 255, 0.2)',
       borderRadius: '50%',
       position: 'absolute',
-      top: '1rem',
-      left: '1rem',
+      top: '0.5rem', // Posição superior
+      right: '0.5rem', // Posição direita
     },
     profileSection: {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      paddingTop: '3rem', // Espaço para o botão de fechar
-      paddingBottom: '2rem',
+      paddingTop: '1rem', // Reduzido
+      paddingBottom: '1rem', // Reduzido
       borderBottom: '1px solid rgba(255, 255, 255, 0.3)',
-      marginBottom: '2rem',
-      gap: '0.5rem',
+      marginBottom: '1rem', // Reduzido
+      gap: '0.25rem',
     },
     avatar: {
-      width: '80px',
-      height: '80px',
+      width: '70px', // Menor
+      height: '70px', // Menor
       borderRadius: '50%',
       marginBottom: '0.5rem',
-      border: '3px solid white',
+      border: '2px solid white', // Borda mais fina
     },
     username: {
       margin: 0,
-      fontSize: '1.5rem',
+      fontSize: '1.2rem', // Menor
       fontWeight: 'bold',
       textAlign: 'center',
+      color: 'white',
     },
     userHeadline: {
       margin: 0,
-      fontSize: '1rem',
+      fontSize: '0.8rem', // Menor
       textAlign: 'center',
       color: 'rgba(255, 255, 255, 0.7)',
     },
@@ -111,23 +109,26 @@ export default function Sidebar() {
       backgroundColor: 'rgba(255, 255, 255, 0.2)',
       color: 'white',
       textDecoration: 'none',
-      padding: '0.75rem 1.5rem',
+      padding: '0.6rem 1rem', // Reduzido
       borderRadius: '9999px',
       fontWeight: 'bold',
-      marginTop: '1rem',
+      marginTop: '0.75rem', // Reduzido
       textAlign: 'center',
       transition: 'background-color 0.2s ease',
+      fontSize: '0.8rem', // Menor
     },
     shortcutsCard: {
       display: 'flex',
       flexDirection: 'column',
-      gap: '1rem',
+      gap: '0.25rem', // Reduzido
+      padding: '0 0.5rem',
     },
     shortcutsTitle: {
       margin: 0,
-      fontSize: '1.25rem',
+      fontSize: '1rem', // Menor
       fontWeight: 'bold',
       color: 'white',
+      paddingLeft: '0.5rem',
     },
     navList: {
       listStyle: 'none',
@@ -135,10 +136,10 @@ export default function Sidebar() {
       margin: 0,
       display: 'flex',
       flexDirection: 'column',
-      gap: '0.75rem',
+      gap: '0.25rem', // Reduzido
     },
     navItem: {
-      padding: '0.75rem 1.5rem',
+      padding: '0.6rem 1rem', // Reduzido
       borderRadius: '9999px',
       backgroundColor: 'rgba(255, 255, 255, 0.3)',
       color: 'white',
@@ -147,11 +148,12 @@ export default function Sidebar() {
       transition: 'background-color 0.2s ease',
       display: 'flex',
       alignItems: 'center',
-      gap: '1rem',
+      gap: '0.75rem', // Reduzido
+      fontSize: '0.9rem', // Menor
     },
     navIcon: {
-      width: '24px',
-      height: '24px',
+      width: '20px', // Menor
+      height: '20px', // Menor
       fill: 'white',
     },
     backdrop: {
@@ -168,79 +170,61 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Botão para abrir o menu em telas pequenas */}
       <button onClick={toggleMenu} style={styles.openMenuButton}>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-        </svg>
+        <FiMenu size={24} color="white" />
       </button>
-
-      {/* A Sidebar */}
       <aside style={styles.sidebar}>
-        {/* Botão de fechar para mobile */}
         <button onClick={toggleMenu} style={styles.closeMenuButton}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <FiX size={24} color="white" />
         </button>
-
         {user && (
           <div style={styles.profileSection}>
-            <img src={user.avatar} alt={user.name} style={styles.avatar} />
-            <h3 style={styles.username}>{user.name}</h3>
-            <p style={styles.userHeadline}>{user.headline}</p>
-            <Link to={`/profile/${user.id}`} style={styles.profileLink} onClick={toggleMenu}>Ver perfil</Link>
+            <div style={styles.avatar}>
+              <img src={user.photoURL} alt={user.displayName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+            </div>
+            <h3 style={styles.username}>{user.displayName}</h3>
+            <p style={styles.userHeadline}>{user.email}</p>
+            <Link to={`/profile/${user.uid}`} style={styles.profileLink} onClick={toggleMenu}>
+              Ver perfil
+            </Link>
           </div>
         )}
-
         <div style={styles.shortcutsCard}>
           <h4 style={styles.shortcutsTitle}>Atalhos</h4>
           <ul style={styles.navList}>
             <li>
               <Link to="/feed" style={styles.navItem} onClick={toggleMenu}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white" style={styles.navIcon}>
-                  <path d="M4 6h16M4 12h16m-7 6h7" />
-                </svg>
+                <FiHome size={24} style={styles.navIcon} />
                 Feed
               </Link>
             </li>
             <li>
               <Link to="/jobs" style={styles.navItem} onClick={toggleMenu}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white" style={styles.navIcon}>
-                  <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
+                <FiBriefcase size={24} style={styles.navIcon} />
                 Procurar vagas
               </Link>
             </li>
             <li>
               <Link to="/messages" style={styles.navItem} onClick={toggleMenu}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white" style={styles.navIcon}>
-                  <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.894A12.593 12.593 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
+                <FiMessageCircle size={24} style={styles.navIcon} />
                 Mensagens
               </Link>
             </li>
             <li>
               <Link to="/notifications" style={styles.navItem} onClick={toggleMenu}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white" style={styles.navIcon}>
-                  <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6.032 7.284 5 8.916V14a2 2 0 00-2 2v2h18v-2a2 2 0 00-2-2z" />
-                </svg>
+                <FiBell size={24} style={styles.navIcon} />
                 Notificações
               </Link>
             </li>
             <li>
               <Link to="/settings" style={styles.navItem} onClick={toggleMenu}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white" style={styles.navIcon}>
-                  <path d="M10.325 4.317c.426-.97 1.528-.97 1.954 0l.477 1.099a1.998 1.998 0 001.372 1.372l1.099.477c.97.426.97 1.528 0 1.954l-1.099.477a1.998 1.998 0 00-1.372 1.372l-.477 1.099c-.426.97-1.528.97-1.954 0l-.477-1.099a1.998 1.998 0 00-1.372-1.372l-1.099-.477c-.97-.426-.97-1.528 0-1.954l1.099-.477a1.998 1.998 0 001.372-1.372l.477-1.099zM15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+                <FiSettings size={24} style={styles.navIcon} />
                 Configurações
               </Link>
             </li>
           </ul>
         </div>
       </aside>
-
-      {/* Backdrop para fechar o menu ao clicar fora dele em mobile */}
       {isMenuOpen && windowWidth <= breakpoint && <div style={styles.backdrop} onClick={toggleMenu}></div>}
     </>
   );
