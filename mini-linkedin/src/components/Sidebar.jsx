@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { FiMenu, FiX, FiUser, FiHome, FiBriefcase, FiMessageCircle, FiBell, FiSettings } from 'react-icons/fi';
 
 export default function Sidebar() {
-  const { user } = useAuth();
+  const { user, profileData } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
@@ -26,16 +26,16 @@ export default function Sidebar() {
   const styles = {
     openMenuButton: {
       position: 'fixed',
-      top: '0.5rem', // Posição superior
-      left: '0.5rem', // Posição esquerda
+      top: '0.5rem',
+      left: '0.5rem',
       zIndex: 11,
       cursor: 'pointer',
       backgroundColor: '#E53E3E',
       color: 'white',
       border: 'none',
       borderRadius: '50%',
-      width: '44px', // Menor
-      height: '44px', // Menor
+      width: '44px',
+      height: '44px',
       display: windowWidth <= breakpoint ? 'flex' : 'none',
       alignItems: 'center',
       justifyContent: 'center',
@@ -44,8 +44,8 @@ export default function Sidebar() {
     },
     sidebar: {
       backgroundColor: '#E53E3E',
-      width: windowWidth > breakpoint ? '250px' : '80vw', // Largura menor
-      maxWidth: '300px', // Menor
+      width: windowWidth > breakpoint ? '250px' : '80vw',
+      maxWidth: '300px',
       height: '100vh',
       position: 'fixed',
       top: 0,
@@ -54,54 +54,57 @@ export default function Sidebar() {
       transition: 'transform 0.3s ease-in-out',
       zIndex: 10,
       boxShadow: '2px 0 5px rgba(0,0,0,0.2)',
-      padding: '1rem', // Padding reduzido
+      padding: '1rem',
       display: 'flex',
       flexDirection: 'column',
-      borderTopRightRadius: windowWidth > breakpoint ? '0px' : '20px', // Menor
-      borderBottomRightRadius: windowWidth > breakpoint ? '0px' : '20px', // Menor
+      borderTopRightRadius: windowWidth > breakpoint ? '0px' : '20px',
+      borderBottomRightRadius: windowWidth > breakpoint ? '0px' : '20px',
       overflowY: 'auto',
     },
     closeMenuButton: {
       cursor: 'pointer',
       color: 'white',
-      width: '36px', // Menor
-      height: '36px', // Menor
+      width: '36px',
+      height: '36px',
       display: windowWidth <= breakpoint ? 'flex' : 'none',
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: 'rgba(255, 255, 255, 0.2)',
       borderRadius: '50%',
       position: 'absolute',
-      top: '0.5rem', // Posição superior
-      right: '0.5rem', // Posição direita
+      top: '0.5rem',
+      right: '0.5rem',
     },
     profileSection: {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      paddingTop: '1rem', // Reduzido
-      paddingBottom: '1rem', // Reduzido
+      paddingTop: '1rem',
+      paddingBottom: '1rem',
       borderBottom: '1px solid rgba(255, 255, 255, 0.3)',
-      marginBottom: '1rem', // Reduzido
+      marginBottom: '1rem',
       gap: '0.25rem',
     },
     avatar: {
-      width: '70px', // Menor
-      height: '70px', // Menor
+      width: '70px',
+      height: '70px',
       borderRadius: '50%',
       marginBottom: '0.5rem',
-      border: '2px solid white', // Borda mais fina
+      border: '2px solid white',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     username: {
       margin: 0,
-      fontSize: '1.2rem', // Menor
+      fontSize: '1.2rem',
       fontWeight: 'bold',
       textAlign: 'center',
       color: 'white',
     },
     userHeadline: {
       margin: 0,
-      fontSize: '0.8rem', // Menor
+      fontSize: '0.8rem',
       textAlign: 'center',
       color: 'rgba(255, 255, 255, 0.7)',
     },
@@ -109,23 +112,23 @@ export default function Sidebar() {
       backgroundColor: 'rgba(255, 255, 255, 0.2)',
       color: 'white',
       textDecoration: 'none',
-      padding: '0.6rem 1rem', // Reduzido
+      padding: '0.6rem 1rem',
       borderRadius: '9999px',
       fontWeight: 'bold',
-      marginTop: '0.75rem', // Reduzido
+      marginTop: '0.75rem',
       textAlign: 'center',
       transition: 'background-color 0.2s ease',
-      fontSize: '0.8rem', // Menor
+      fontSize: '0.8rem',
     },
     shortcutsCard: {
       display: 'flex',
       flexDirection: 'column',
-      gap: '0.25rem', // Reduzido
+      gap: '0.25rem',
       padding: '0 0.5rem',
     },
     shortcutsTitle: {
       margin: 0,
-      fontSize: '1rem', // Menor
+      fontSize: '1rem',
       fontWeight: 'bold',
       color: 'white',
       paddingLeft: '0.5rem',
@@ -136,10 +139,10 @@ export default function Sidebar() {
       margin: 0,
       display: 'flex',
       flexDirection: 'column',
-      gap: '0.25rem', // Reduzido
+      gap: '0.25rem',
     },
     navItem: {
-      padding: '0.6rem 1rem', // Reduzido
+      padding: '0.6rem 1rem',
       borderRadius: '9999px',
       backgroundColor: 'rgba(255, 255, 255, 0.3)',
       color: 'white',
@@ -148,12 +151,12 @@ export default function Sidebar() {
       transition: 'background-color 0.2s ease',
       display: 'flex',
       alignItems: 'center',
-      gap: '0.75rem', // Reduzido
-      fontSize: '0.9rem', // Menor
+      gap: '0.75rem',
+      fontSize: '0.9rem',
     },
     navIcon: {
-      width: '20px', // Menor
-      height: '20px', // Menor
+      width: '20px',
+      height: '20px',
       fill: 'white',
     },
     backdrop: {
@@ -180,7 +183,11 @@ export default function Sidebar() {
         {user && (
           <div style={styles.profileSection}>
             <div style={styles.avatar}>
-              <img src={user.photoURL} alt={user.displayName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+              {profileData && profileData.fotoURL ? (
+                <img src={profileData.fotoURL} alt="Foto de Perfil" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+              ) : (
+                <FiUser size={40} color="white" />
+              )}
             </div>
             <h3 style={styles.username}>{user.displayName}</h3>
             <p style={styles.userHeadline}>{user.email}</p>
