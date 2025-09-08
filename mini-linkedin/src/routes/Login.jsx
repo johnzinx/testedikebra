@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
-import { auth } from '../services/firebase'
+import { doc, setDoc } from 'firebase/firestore'
+import { auth, db } from '../services/firebase'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -16,9 +17,25 @@ export default function Login() {
 
   const enviar = async (e) => {
     e.preventDefault()
+    setErro(null)
+    setSucesso(null)
+
     try {
       if (isCadastro) {
-        await createUserWithEmailAndPassword(auth, email, senha)
+        // Cria usuário no Firebase Auth
+        const cred = await createUserWithEmailAndPassword(auth, email, senha)
+        const uid = cred.user.uid
+
+        // Salva dados extras no Firestore
+        await setDoc(doc(db, "users", uid), {
+          nome,
+          cpf,
+          dataNascimento,
+          email,
+          telefone: "",
+          fotoURL: ""
+        })
+
         navigate('/feed')
       } else {
         await signInWithEmailAndPassword(auth, email, senha)

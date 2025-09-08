@@ -184,12 +184,20 @@ export default function Sidebar() {
           <div style={styles.profileSection}>
             <div style={styles.avatar}>
               {profileData && profileData.fotoURL ? (
-                <img src={profileData.fotoURL} alt="Foto de Perfil" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                <img
+                  src={profileData.fotoURL}
+                  alt="Foto de Perfil"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                />
               ) : (
                 <FiUser size={40} color="white" />
               )}
             </div>
-            <h3 style={styles.username}>{user.displayName}</h3>
+            {/* Mostra o NOME do Firestore, não o displayName */}
+            <h3 style={styles.username}>
+              {profileData?.nome || 'Usuário sem nome'}
+            </h3>
+            {/* Email continua aparecendo como subtítulo */}
             <p style={styles.userHeadline}>{user.email}</p>
             <Link to={`/profile/${user.uid}`} style={styles.profileLink} onClick={toggleMenu}>
               Ver perfil

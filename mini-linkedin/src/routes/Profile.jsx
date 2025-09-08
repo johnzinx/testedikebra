@@ -116,13 +116,13 @@ export default function Profile() {
         <p style={{ color: '#2C3E50', fontSize: '1.125rem', animation: 'pulse 2s infinite' }}>Carregando perfil...</p>
       </div>
     );
-  
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '1rem', paddingBottom: '1rem', backgroundColor: '#ECECEC' }}>
       {!isEditing && (
         <div style={{ width: containerWidth, backgroundColor: '#ECECEC', borderRadius: '1.5rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', padding: '1.5rem', marginTop: '4rem', position: 'relative' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '1.5rem', color: '#000' }}>Perfil</h2>
-          
+
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem', position: 'relative' }}>
             <div style={{ width: '8rem', height: '8rem', borderRadius: '9999px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#E6E69D', position: 'relative' }}>
               {perfil.fotoURL ? (
@@ -143,9 +143,14 @@ export default function Profile() {
             </button>
           </div>
 
+     
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ padding: '0.75rem', borderRadius: '9999px', border: '1px solid #D9D9D9', backgroundColor: '#fff', color: '#000', textAlign: 'center' }}>
               {perfil.nome || 'Nome e sobrenome não informados'}
+            </div>
+            <div style={{ padding: '0.75rem', borderRadius: '9999px', border: '1px solid #D9D9D9', backgroundColor: '#fff', color: '#000', textAlign: 'center' }}>
+              {perfil.cpf || 'CPF não informado'}
             </div>
             <div style={{ padding: '0.75rem', borderRadius: '9999px', border: '1px solid #D9D9D9', backgroundColor: '#fff', color: '#000', textAlign: 'center' }}>
               {perfil.telefone || 'Telefone não informado'}
@@ -157,6 +162,7 @@ export default function Profile() {
               {perfil.dataNascimento || 'Data de nascimento não informada'}
             </div>
           </div>
+
         </div>
       )}
 
@@ -183,7 +189,7 @@ export default function Profile() {
                 </svg>
               )}
             </div>
-            
+
             <label htmlFor="file-input" style={{ position: 'absolute', bottom: '0', right: '50%', transform: 'translateX(50%)', width: '2rem', height: '2rem', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', cursor: 'pointer', backgroundColor: '#E6E69D' }}>
               <input id="file-input" type="file" onChange={handleImageChange} style={{ display: 'none' }} />
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style={{ color: '#000' }}>
@@ -249,7 +255,7 @@ export default function Profile() {
                 </span>
               </div>
             </div>
-            
+
             <button
               type="button"
               style={{ width: '100%', padding: '0.75rem', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#E6E69D', color: '#000', border: 'none', cursor: 'pointer', marginTop: '1rem' }}
