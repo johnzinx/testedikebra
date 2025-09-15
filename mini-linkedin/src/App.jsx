@@ -9,16 +9,16 @@ import Notifications from './routes/Notifications'
 import Settings from './routes/Settings'
 import Login from './routes/Login'
 import useAuth from './store/useAuth'
-import EditProfile from './routes/EditProfile'  
+import EditProfile from './routes/EditProfile'
 
-
-// NOVO: importar a página pública de perfil
+// NOVOS: páginas públicas
 import Perfil from './pages/Perfil'
+import Home from './routes/Home'
 
 export default function App() {
   const { user } = useAuth()
 
-  // Layout principal (só com login)
+  // Layout principal (apenas usuários logados)
   const PrivateLayout = ({ children }) => {
     if (!user) return <Navigate to="/login" replace />
     return (
@@ -35,14 +35,6 @@ export default function App() {
   return (
     <Routes>
       {/* ROTAS PRIVADAS */}
-      <Route
-        path="/"
-        element={
-          <PrivateLayout>
-            <Feed />
-          </PrivateLayout>
-        }
-      />
       <Route
         path="/feed"
         element={
@@ -101,12 +93,11 @@ export default function App() {
       />
 
       {/* ROTAS PÚBLICAS */}
+      <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/perfil/:uid" element={<Perfil />} />
 
-
-
-      {/* QUALQUER OUTRA ROTA REDIRECIONA */}
+      {/* QUALQUER OUTRA ROTA REDIRECIONA PARA HOME */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
