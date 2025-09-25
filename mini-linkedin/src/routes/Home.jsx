@@ -1,21 +1,23 @@
-import React from "react"
-import { Link } from "react-router-dom"
-import { FiLogIn, FiEye } from "react-icons/fi"
+import React from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Home() {
-  const PRIMARY = "#E53E3E"
-  const BREAKPOINT = 768
+  const PRIMARY = "#E53E3E";
+  const SECONDARY = "#3182CE";
+  const BREAKPOINT = 768;
   const [width, setWidth] = React.useState(
     typeof window !== "undefined" ? window.innerWidth : 1024
-  )
+  );
+
+  const navigate = useNavigate();
 
   React.useEffect(() => {
-    const handleResize = () => setWidth(window.innerWidth)
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
+    const handleResize = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-  const isDesktop = width >= BREAKPOINT
+  const isDesktop = width >= BREAKPOINT;
 
   const styles = {
     container: {
@@ -62,43 +64,36 @@ export default function Home() {
       cursor: "pointer",
       transition: "all 0.2s ease",
       border: "none",
-    },
-    login: {
-      backgroundColor: PRIMARY,
       color: "white",
     },
-    explore: {
-      backgroundColor: "transparent",
-      border: `2px solid ${PRIMARY}`,
-      color: PRIMARY,
+    criar: {
+      backgroundColor: PRIMARY,
     },
-    smallText: {
-      fontSize: "0.9rem",
-      color: "#777",
-      marginTop: "1rem",
+    login: {
+      backgroundColor: SECONDARY,
     },
-  }
+  };
 
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>Bem-vindo(a) ao Dikebra</h1>
-      <p style={styles.subtitle}>
-        Oportunidades ao seu alcance
-      </p>
+      <p style={styles.subtitle}>Oportunidades ao seu alcance</p>
 
       <div style={styles.buttons}>
-        <Link to="/login" style={{ ...styles.baseButton, ...styles.login }}>
-          <FiLogIn size={18} /> Entrar
-        </Link>
-        <Link
-          to="/perfil/demo"
-          style={{ ...styles.baseButton, ...styles.explore }}
+        <button
+          style={{ ...styles.baseButton, ...styles.criar }}
+          onClick={() => navigate("/login?cadastro=true")}
         >
-          <FiEye size={18} /> Explorar
-        </Link>
-      </div>
+          Criar Conta
+        </button>
 
-      <p style={styles.smallText}>Já tem uma conta? Faça login e aproveite.</p>
+        <button
+          style={{ ...styles.baseButton, ...styles.login }}
+          onClick={() => navigate("/login")}
+        >
+          Já tenho conta
+        </button>
+      </div>
     </div>
-  )
+  );
 }
