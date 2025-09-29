@@ -7,7 +7,7 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
   const { user: usuarioLogado, profileData, updateProfilePicture } = useAuth();
   const [perfil, setPerfil] = useState({
     nome: '',
-    telefone: '',
+    telefone: '',   
     email: '',
     dataNascimento: '',
     tipoDeficiencia: '',
