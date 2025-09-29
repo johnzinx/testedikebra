@@ -41,7 +41,7 @@ export default function Login() {
 
         const dadosUsuario = {
           email,
-          nome, // O nome da pessoa ou da empresa
+          nome, // nome da pess=oa ou da empresa
           tipoUsuario,
           fotoURL: "",
           telefone: "",

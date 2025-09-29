@@ -5,7 +5,7 @@ import { getFirestore } from "firebase/firestore"
 import { getStorage } from "firebase/storage"
 import { getAnalytics } from "firebase/analytics"
 
-// Config do seu projeto (pega no console do Firebase)
+// config do firebase
 const firebaseConfig = {
   apiKey: "AIzaSyBTxKC6WE2M89ghPpofbJzgSHlmV5tyPq0",
   authDomain: "dikebra-5ee99.firebaseapp.com",
@@ -16,13 +16,13 @@ const firebaseConfig = {
   measurementId: "G-0QPNZYTTQQ",
 }
 
-// Inicializa o Firebase
+// começa o Firebase
 const app = initializeApp(firebaseConfig)
 
-// (Opcional) Analytics, só se quiser usar
+// analiticits
 const analytics = getAnalytics(app)
 
-// Exporta os serviços que vamos usar no app
+// aq é os nossos serviços ali de cima do import
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const storage = getStorage(app)

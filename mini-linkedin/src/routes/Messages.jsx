@@ -16,13 +16,13 @@ import useAuthStore from "../store/useAuth";
 
 export default function Messages() {
   const { user, profileData } = useAuthStore();
-  const [chats, setChats] = useState([]); // chats recentes
+  const [chats, setChats] = useState([]); // aq é os chats
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const bottomRef = useRef();
 
-  // Buscar chats recentes do usuário
+  //bsuca os chats recentes
   useEffect(() => {
     const q = query(collection(db, "chats"));
     const unsubscribe = onSnapshot(q, async (snapshot) => {
@@ -50,7 +50,7 @@ export default function Messages() {
     return () => unsubscribe();
   }, [user.uid]);
 
-  // Buscar mensagens do chat selecionado
+  //busca as mensagens
   useEffect(() => {
     if (!selectedChat) return;
 
@@ -89,14 +89,14 @@ export default function Messages() {
     if (!selectedChat) return;
     if (!window.confirm("Tem certeza que quer deletar este chat?")) return;
 
-    // Deletar todas as mensagens do chat
+    // apga mensagens do chat
     const msgCol = collection(db, "chats", selectedChat.id, "messages");
     const snapshot = await getDocs(msgCol);
     for (let docSnap of snapshot.docs) {
       await deleteDoc(doc(db, "chats", selectedChat.id, "messages", docSnap.id));
     }
 
-    // Deletar o chat
+    // deleta o chat
     await deleteDoc(doc(db, "chats", selectedChat.id));
     setSelectedChat(null);
   };

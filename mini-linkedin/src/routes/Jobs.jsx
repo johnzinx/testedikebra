@@ -26,7 +26,7 @@ export default function Jobs() {
 
   const tiposDeficiencia = ['Visual', 'Auditiva', 'Fisica', 'Intelectual', 'Múltipla', 'Outra'];
 
-  // 1. OBTÉM AS VAGAS DO FIRESTORE EM TEMPO REAL
+  // vagas em tempo real no react
   useEffect(() => {
     const q = query(collection(db, "vagas"), orderBy("postedAt", "desc"));
     
@@ -43,7 +43,7 @@ export default function Jobs() {
     return () => unsubscribe();
   }, []);
 
-  // 2. CARREGA E SALVA VAGAS APLICADAS/SALVAS NO LOCALSTORAGE (mantido para simplicidade)
+  // salva as vagas no localstorage
   useEffect(() => {
     setAppliedJobs(JSON.parse(localStorage.getItem("appliedJobs")) || []);
     setSavedJobs(JSON.parse(localStorage.getItem("savedJobs")) || []);
@@ -74,7 +74,7 @@ export default function Jobs() {
     }
   };
 
-  // 3. ADICIONA NOVA VAGA NO FIRESTORE
+  // add a vaga no firestore
   const handleAddJob = async () => {
     if (!newJob.title || !newJob.company || !newJob.location || !newJob.deficiencia) return;
     
@@ -84,7 +84,7 @@ export default function Jobs() {
         company: newJob.company,
         location: newJob.location,
         deficiencia: newJob.deficiencia,
-        postedAt: serverTimestamp(), // Adiciona o timestamp do servidor
+        postedAt: serverTimestamp(), 
       });
       setNewJob({ title: "", company: "", location: "", deficiencia: "" });
       setIsModalOpen(false);

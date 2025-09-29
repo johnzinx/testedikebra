@@ -25,9 +25,9 @@ export default function Navbar() {
     }
   }, [darkMode]);
 
-  // Estilo para fazer a navbar sumir completamente
+  // pra tirar a navbar
   const navbarStyle = {
-    display: 'none', // Isso remove a navbar do fluxo do documento
+    display: 'none',
   };
 
   return (

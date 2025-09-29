@@ -126,6 +126,7 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
         formData.append('file', imagemPerfil);
         formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
 
+// database das imagens
         const response = await fetch(
           `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
           {

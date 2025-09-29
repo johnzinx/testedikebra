@@ -11,14 +11,14 @@ import Login from './routes/Login'
 import useAuth from './store/useAuth'
 import EditProfile from './routes/EditProfile'
 
-// NOVOS: páginas públicas
+//  páginas públicas
 import Perfil from './pages/Perfil'
 import Home from './routes/Home'
 
 export default function App() {
   const { user } = useAuth()
 
-  // Layout principal (apenas usuários logados)
+  // pagina principal aq
   const PrivateLayout = ({ children }) => {
     if (!user) return <Navigate to="/login" replace />
     return (
