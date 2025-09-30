@@ -13,6 +13,7 @@ npm install cloudinary
 npm run dev
 
 do vercel:
+
 npm i -g vercel 
 
 vercel logout    
