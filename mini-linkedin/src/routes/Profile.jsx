@@ -13,7 +13,7 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
     tipoDeficiencia: '',
     deficiencia: '',
     fotoURL: '',
-    tipoUsuario: 'pcd',
+    tipoUsuario: '',
     cpf: '',
     cnpj: '',
     razaoSocial: '',

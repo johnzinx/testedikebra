@@ -6,9 +6,7 @@ export default function Settings() {
   const { user, logout } = useAuth();
   const [openSection, setOpenSection] = useState(null); // Para controlar qual seção está aberta
   const { profileData } = useAuthStore();
-  const [ perfil,setPerfil  ]= useState({
-    dataNascimento: '',
-  });
+   
   const dadosCarregados = profileData;
 
   const handleLogout = () => {
@@ -155,6 +153,10 @@ export default function Settings() {
           <p style={styles.infoText}>
             Data de Nascimento: <span style={{fontWeight: 'bold'}}>{dadosCarregados.dataNascimento}</span>
           </p>
+          <p style={styles.infoText}>
+            Telefone: <span style={{fontWeight: 'bold'}}>{dadosCarregados.telefone}</span>
+          </p>
+            
           <button 
             style={styles.buttonDanger} 
             onClick={handleLogout}
