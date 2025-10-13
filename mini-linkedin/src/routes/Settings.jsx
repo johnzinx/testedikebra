@@ -157,12 +157,7 @@ export default function Settings() {
             Telefone: <span style={{fontWeight: 'bold'}}>{dadosCarregados.telefone}</span>
           </p>
             
-          <button 
-            style={styles.buttonDanger} 
-            onClick={handleLogout}
-          >
-            Sair da Conta  
-          </button>
+         
         </div>
       )}
 
@@ -180,7 +175,12 @@ export default function Settings() {
 
       {openSection === 'actions' && (
         <div style={styles.contentArea}>
-     
+      <button 
+            style={styles.buttonDanger} 
+            onClick={handleLogout}
+          >
+            Sair da Conta  
+          </button>
           
        
           

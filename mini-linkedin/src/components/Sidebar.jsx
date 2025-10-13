@@ -7,7 +7,7 @@ export default function Sidebar() {
   const { user, profileData } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-
+ 
   const breakpoint = 768;
 
   useEffect(() => {
@@ -244,3 +244,5 @@ export default function Sidebar() {
     </>
   );
 }
+
+<h5>todos os direitos reservados</h5>

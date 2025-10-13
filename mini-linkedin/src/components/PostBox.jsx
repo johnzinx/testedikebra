@@ -66,7 +66,7 @@ export default function PostBox() {
         marginBottom: '1rem',
         textAlign: 'center',
       }}>
-        Crie uma Nova Publicação 📝
+        Crie uma Nova Publicação 
       </h2>
       <textarea
         value={postText} // Usa postText
@@ -87,10 +87,10 @@ export default function PostBox() {
         }}
         onFocus={(e) => {
           e.target.style.borderColor = '#66b3ff';
-          e.target.style.boxShadow = '0 0 0 3px rgba(102, 179, 255, 0.25)';
+          e.target.style.boxShadow = '0 0 0 3px rgba(255, 0, 0, 0.25)';
         }}
         onBlur={(e) => {
-          e.target.style.borderColor = '#ccc';
+          e.target.style.borderColor = 'red';
           e.target.style.boxShadow = 'none';
         }}
         disabled={postLoading} // Desabilita durante o loading
@@ -100,20 +100,19 @@ export default function PostBox() {
         disabled={postLoading || !postText.trim()} // Desabilita se estiver carregando ou vazio
         style={{
           marginTop: '1.25rem',
-          backgroundColor: '#E53E3E',
           color: 'white',
+          backgroundColor:'red',
           padding: '0.75rem 1.5rem',
           borderRadius: '0.5rem',
           border: 'none',
           cursor: 'pointer',
-          transition: 'all 0.3s ease-in-out',
           fontSize: '1.1rem',
           fontWeight: '600',
           width: '100%',
           opacity: (postLoading || !postText.trim()) ? 0.6 : 1, // Feedback visual de desabilitado
         }}
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = postLoading ? '#4CAF50' : '#45a049'}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4CAF50'}
+        onMouseOver={(e) => e.currentTarget.style.backgroundColor = postLoading ? 'red' : 'red'}
+        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'red'}
       >
         {postLoading ? 'Publicando...' : 'Publicar'} {/* Feedback de loading */}
       </button>

@@ -6,8 +6,9 @@ import {
   FiCalendar,
   FiBookmark,
   FiX,
+  FiTrash2 
 } from "react-icons/fi";
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc } from "firebase/firestore"; // Importa deleteDoc e doc
 import { db } from "../services/firebase"; 
 import useAuthStore from '../store/useAuth'; 
 
@@ -24,7 +25,7 @@ export default function Jobs() {
   const [savedJobs, setSavedJobs] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [view, setView] = useState("explorar");
-  const [filterDeficiencia, setFilterDeficiencia] = useState("todas");
+  const [filterDeficiencia, setFilterDeficiencia] = useState("todas"); 
   const [newJob, setNewJob] = useState({ title: "", company: "", location: "", deficiencia: "" });
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
@@ -105,6 +106,24 @@ export default function Jobs() {
     }
   };
 
+  const handleDeleteJob = async (jobId, jobEmpresaUid) => {
+    if (!user || !isEmpresa || user.uid !== jobEmpresaUid) {
+        alert("Você não tem permissão para excluir esta vaga.");
+        return;
+    }
+
+    if (window.confirm("Tem certeza que deseja remover esta vaga?")) {
+        try {
+            await deleteDoc(doc(db, "vagas", jobId));
+            // A atualização do estado 'jobs' é tratada automaticamente pelo onSnapshot
+            alert("Vaga excluída com sucesso!");
+        } catch (error) {
+            console.error("Erro ao excluir vaga:", error);
+            alert("Erro ao excluir a vaga.");
+        }
+    }
+  };
+
   const handleAddJob = async () => {
     if (!newJob.title || !newJob.company || !newJob.location || !newJob.deficiencia) {
         alert("Preencha todos os campos.");
@@ -143,18 +162,22 @@ export default function Jobs() {
         filteredList = listToFilter.filter(job => job.empresaUid === user.uid);
     }
     
-    // 2. Filtro por Deficiência (Lógica ajustada para 'qualquer')
-    if (filterDeficiencia === "todas") {
+    // 2. Lógica de Filtro Aprimorada
+    const filterValue = filterDeficiencia.toLowerCase();
+
+    if (filterValue === "todas") {
+        // 'Todas as Vagas': Retorna a lista completa
         return filteredList;
-    } else {
-        const filterValue = filterDeficiencia.toLowerCase();
-        
-        return filteredList.filter(job => 
-            // Mostra vagas que correspondem ao filtro OU que são para 'qualquer'
-            job.deficiencia === filterValue || 
-            job.deficiencia === 'qualquer'
-        );
+    } 
+    
+    if (filterValue === "qualquer") {
+        // 'Qualquer um': Retorna apenas vagas marcadas como 'qualquer'
+        return filteredList.filter(job => job.deficiencia === 'qualquer');
     }
+    
+    // Filtro por Deficiência Específica (o valor é a deficiência, ex: 'visual')
+    // AQUI: Apenas vagas com aquela deficiência específica são mostradas.
+    return filteredList.filter(job => job.deficiencia === filterValue);
   }
 
   const displayedJobs = getFilteredJobs();
@@ -170,9 +193,10 @@ export default function Jobs() {
     modalOverlay: { position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", backgroundColor: "rgba(229, 62, 62, 0.1)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "1rem" },
     modalContent: { backgroundColor: "#fff", padding: "1.5rem", borderRadius: "10px", boxShadow: "0 10px 30px rgba(0,0,0,0.2)", width: "100%", maxWidth: "400px", display: "flex", flexDirection: "column", gap: "0.75rem" },
     input: { padding: "0.5rem", border: "1px solid #E53E3E", borderRadius: "6px" },
-    buttonRow: { display: "flex", flexDirection: isMobile ? "column" : "row", gap: "0.5rem" },
+    buttonRow: { display: "flex", flexDirection: isMobile ? "column" : "row", gap: "0.5rem", alignItems: 'center', marginTop: '0.5rem' },
     primaryBtn: { flex: 1, background: "#E53E3E", color: "white", border: "none", borderRadius: "6px", padding: "0.5rem 1rem", cursor: "pointer", fontWeight: "600" },
     secondaryBtn: { flex: 1, background: "transparent", color: "#E53E3E", border: "1px solid #E53E3E", borderRadius: "6px", padding: "0.5rem 1rem", cursor: "pointer", fontWeight: "600" },
+    deleteBtn: { background: "#e53e3e", color: "white", border: "none", borderRadius: "6px", padding: "0.5rem 1rem", cursor: "pointer", fontWeight: "600", width: '100%' }, // Estilo para o botão de exclusão
     filterSelect: { padding: "0.5rem", borderRadius: "6px", border: "1px solid #E53E3E", marginBottom: "1rem", width: "100%", textAlign: "center" }
   };
 
@@ -196,29 +220,33 @@ export default function Jobs() {
         </div>
       </div>
       
-      {/* SELETOR DE FILTRO (ATUALIZADO) */}
-      <select 
-        style={styles.filterSelect} 
-        onChange={(e) => setFilterDeficiencia(e.target.value)} 
-        value={filterDeficiencia}
-      >
-          {/* 1. OPÇÃO PLACEHOLDER (EM NEGRITO E DESABILITADA) */}
-          <option value="todas" disabled style={{ fontWeight: 'bold' }}>Filtrar por Candidato (Todas as Vagas)</option>
+      {/* SELETOR DE FILTRO */}
+      {!isEmpresa && ( // O filtro é mais relevante para o Candidato, não para a listagem da Empresa
+        <select 
+          style={styles.filterSelect} 
+          onChange={(e) => setFilterDeficiencia(e.target.value)} 
+          value={filterDeficiencia}
+        >
+            {/* 1. OPÇÃO PLACEHOLDER (EM NEGRITO E DESABILITADA) */}
+            <option value="todas" disabled style={{ fontWeight: 'bold' }}>Filtrar por Candidato</option>
+            
+            {/* Opção para ver TODAS as vagas, independentemente do tipo */}
+            <option value="todas">Todas as Vagas</option>
 
-          {/* 2. OPÇÃO: QUALQUER PESSOA (Limpa o filtro) */}
-          {/* Mapeamos para 'todas' para que o `getFilteredJobs` retorne a lista completa */}
-          <option value="todas">Qualquer pessoa</option>
-          
-          {/* 3. GRUPO: FILTRAR POR DEFICIÊNCIA ESPECÍFICA */}
-          <optgroup label="Filtrar por Deficiência Específica">
-              {/* Mapeia apenas os tipos de deficiência específicos */}
-              {tiposDeficiencia
-                  .filter(t => t !== 'Qualquer')
-                  .map(tipo => (
-                  <option key={tipo} value={tipo.toLowerCase()}>{tipo}</option>
-              ))}
-          </optgroup>
-      </select>
+            {/* Opção para ver APENAS as vagas para o público geral/Qualquer Pessoa */}
+            <option value="qualquer">Qualquer pessoa (Público Geral)</option>
+            
+            {/* 2. GRUPO: FILTRAR POR DEFICIÊNCIA ESPECÍFICA */}
+            <optgroup label="Filtrar por Deficiência Específica">
+                {/* Mapeia apenas os tipos de deficiência específicos */}
+                {tiposDeficiencia
+                    .filter(t => t !== 'Qualquer')
+                    .map(tipo => (
+                    <option key={tipo} value={tipo.toLowerCase()}>{tipo}</option>
+                ))}
+            </optgroup>
+        </select>
+      )}
 
       <div style={styles.jobsGrid}>
         {displayedJobs.length === 0 ? (
@@ -228,6 +256,7 @@ export default function Jobs() {
             const isApplied = appliedJobs.some((j) => j.id === job.id);
             const isSaved = savedJobs.some((j) => j.id === job.id);
             const postedAtDate = job.postedAt?.toDate ? job.postedAt.toDate() : new Date();
+            const canDelete = isEmpresa && user && job.empresaUid === user.uid;
 
             return (
               <div key={job.id} style={styles.jobCard}>
@@ -236,20 +265,28 @@ export default function Jobs() {
                 <p><FiMapPin /> {job.location}</p>
                 <p><FiCalendar /> Publicada em {postedAtDate.toLocaleDateString("pt-BR")}</p>
                 <p style={{ fontWeight: 'bold' }}>Público Alvo: {formatDeficiencia(job.deficiencia)}</p>
-                <div style={styles.buttonRow}>
-                  
-                  {isCandidato && (
+                
+                {/* Botões para Candidato */}
+                {!isEmpresa && (
+                  <div style={styles.buttonRow}>
                     <button onClick={() => handleApply(job)} style={styles.primaryBtn}>
                       {isApplied ? <><FiX style={{ marginRight: "0.3rem" }} /> Cancelar</> : "Candidatar-se"}
                     </button>
-                  )}
-                  
-                  {isCandidato && (
                     <button onClick={() => handleSave(job)} style={styles.secondaryBtn}>
                       <FiBookmark style={{ marginRight: "0.3rem" }} /> {isSaved ? "Remover" : "Salvar"}
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
+                
+                {/* Botão de Excluir Vaga (Apenas para a Empresa criadora) */}
+                {canDelete && (
+                    <button 
+                        onClick={() => handleDeleteJob(job.id, job.empresaUid)} 
+                        style={styles.deleteBtn}
+                    >
+                        <FiTrash2 style={{ marginRight: "0.3rem" }} /> Excluir Vaga
+                    </button>
+                )}
               </div>
             );
           })
@@ -278,7 +315,7 @@ export default function Jobs() {
                 <option value="qualquer">Qualquer pessoa</option>
                 
                 {/* GRUPO: CANDIDATO DEFICIENTE (PCD) */}
-                <optgroup label="Candidato Deficiente">
+                <optgroup label="Candidato Deficiente" >
                     {tiposDeficiencia
                         .filter(tipo => tipo !== 'Qualquer')
                         .map(tipo => (
