@@ -12,16 +12,15 @@ import { auth, db } from '../services/firebase';
 import { FaGoogle } from "react-icons/fa";
 import LogoImg from '../img/logodkebra.jpg';
 
-// === PALETA DE CORES PROFISSIONALIZADA ===
-const FONT_COLOR_DARK = "#1A1A1A";      
-const ACCENT_COLOR = "#CF0908";         
-const PRIMARY = "#FFFFFF";              
-const BACKGROUND_COLOR = "#1A1A1A";     
-const BORDER_COLOR = "#E0E0E0";         
+// nossa paleta 
+const FONT_COLOR_DARK = "#1A1A1A";
+const ACCENT_COLOR = "#CF0908";
+const PRIMARY = "#FFFFFF";
+const BACKGROUND_COLOR = "#1A1A1A";
+const BORDER_COLOR = "#E0E0E0";
 const SUCCESS_COLOR = "green";
-const ERROR_COLOR = "#D32F2F"; // Adicionado para a mensagem de erro
+const ERROR_COLOR = "#D32F2F";
 
-// --- COMPONENTE ButtonWithHover ---
 const HOVER_SHADOW = "0 6px 20px rgba(0, 0, 0, 0.3)";
 const RED_HOVER_SHADOW = `0 8px 25px ${ACCENT_COLOR}70`;
 
@@ -30,23 +29,23 @@ const ButtonWithHover = ({ style, onClick, children, type = "button" }) => {
 
   const shadow = style.backgroundColor === ACCENT_COLOR ? RED_HOVER_SHADOW : HOVER_SHADOW;
 
-  const hoverStyle = { 
-    transform: "translateY(-2px)", 
-    boxShadow: shadow 
+  const hoverStyle = {
+    transform: "translateY(-2px)",
+    boxShadow: shadow
   };
-  
-  const baseStyle = { 
-      transition: "all 0.3s ease-in-out",
-      cursor: "pointer",
-      ...style  
+
+  const baseStyle = {
+    transition: "all 0.3s ease-in-out",
+    cursor: "pointer",
+    ...style
   };
 
   return (
     <button
       type={type}
-      style={{ 
+      style={{
         ...baseStyle,
-        ...(isHovered ? hoverStyle : {}) 
+        ...(isHovered ? hoverStyle : {})
       }}
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
@@ -56,7 +55,7 @@ const ButtonWithHover = ({ style, onClick, children, type = "button" }) => {
     </button>
   );
 };
-// ----------------------------------------------------------------------------
+
 
 
 export default function Login() {
@@ -78,8 +77,8 @@ export default function Login() {
   const [erro, setErro] = useState(null);
   const [sucesso, setSucesso] = useState(null);
 
-  // Estados para simular o :focus nos inputs
-  const [focusedInput, setFocusedInput] = useState(null); 
+
+  const [focusedInput, setFocusedInput] = useState(null);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -95,10 +94,10 @@ export default function Login() {
 
     try {
       if (isCadastro) {
-        // Validação básica para Usuário Individual
+        // valida o usuario individual
         if (tipoUsuario === 'Usuário Individual' && (!cpf || !dataNascimento)) {
-             setErro("CPF e Data de Nascimento são obrigatórios para Usuário Individual.");
-             return;
+          setErro("CPF e Data de Nascimento são obrigatórios para Usuário Individual.");
+          return;
         }
 
         const cred = await createUserWithEmailAndPassword(auth, email, senha);
@@ -110,13 +109,15 @@ export default function Login() {
 
         if (tipoUsuario === 'pcd') {
           dadosUsuario.cpf = cpf; dadosUsuario.dataNascimento = dataNascimento;
+          // pcd: deficiencia, tipo deficiencia
           dadosUsuario.deficiencia = deficiencia; dadosUsuario.tipoDeficiencia = tipoDeficiencia;
+          // empresa: cnpj, razao social
         } else if (tipoUsuario === 'empresa') {
           dadosUsuario.cnpj = cnpj; dadosUsuario.razaoSocial = razaoSocial;
         } else if (tipoUsuario === 'Usuário Individual') {
-          // Lógica para Usuário Individual: CPF e Data de Nascimento
+          // usuario indivudal: CPF e Data de Nascimento
           dadosUsuario.cpf = cpf; dadosUsuario.dataNascimento = dataNascimento;
-          // Não precisa de deficiência/tipoDeficiencia
+
         }
 
         await setDoc(doc(db, "users", uid), dadosUsuario);
@@ -126,7 +127,6 @@ export default function Login() {
         navigate('/feed');
       }
     } catch (err) {
-      // Mapeamento de erros do Firebase para português, se necessário
       setErro(err.message.includes("auth/email-already-in-use") ? "Este e-mail já está cadastrado." : err.message);
     }
   };
@@ -151,8 +151,8 @@ export default function Login() {
     await signInWithRedirect(auth, provider);
   };
 
-
-  // Estilo Base de Botão (para ser usado no ButtonWithHover)
+  // estilos
+  // estilo do botao base
   const baseButton = {
     padding: "14px 20px",
     borderRadius: "10px",
@@ -175,7 +175,7 @@ export default function Login() {
       alignItems: "center",
       minHeight: "100vh",
       backgroundColor: BACKGROUND_COLOR,
-      backgroundImage: `radial-gradient(circle at center, #2d2d2d 0%, ${BACKGROUND_COLOR} 100%)`, 
+      backgroundImage: `radial-gradient(circle at center, #2d2d2d 0%, ${BACKGROUND_COLOR} 100%)`,
       position: "relative",
       padding: "20px",
       boxSizing: "border-box",
@@ -223,7 +223,7 @@ export default function Login() {
       fontWeight: "800",
       color: FONT_COLOR_DARK
     },
-    // ESTILO BASE DE INPUT
+    // estilo dso input
     baseInput: {
       width: "100%",
       padding: "14px 16px",
@@ -235,13 +235,13 @@ export default function Login() {
       backgroundColor: "#FAFAFA",
       transition: "all 0.3s ease",
     },
-    // Estilo de input dinâmico (usa o estado 'focusedInput')
+    // Eestilo de input dinamico
     dynamicInput: (fieldName) => ({
       ...styles.baseInput,
       border: `1px solid ${focusedInput === fieldName ? ACCENT_COLOR : BORDER_COLOR}`,
       boxShadow: focusedInput === fieldName ? `0 0 0 2px ${ACCENT_COLOR}30` : 'none',
     }),
-    
+
     btnPrimary: {
       ...baseButton,
       backgroundColor: ACCENT_COLOR,
@@ -270,7 +270,7 @@ export default function Login() {
       margin: "4px 8px",
       fontSize: "0.95rem",
       transition: "opacity 0.2s",
-      textDecoration: "underline" // Adicionado para destacar que é um link
+      textDecoration: "underline" 
     },
     radioLabelStyle: {
       fontWeight: 500,
@@ -280,7 +280,7 @@ export default function Login() {
       gap: '6px',
       marginRight: '12px',
     },
-    // Estilo para o <select>
+    // estilo pro select
     selectStyle: (isFocused) => ({
       ...styles.baseInput,
       border: `1px solid ${isFocused ? ACCENT_COLOR : BORDER_COLOR}`,
@@ -292,8 +292,8 @@ export default function Login() {
       paddingRight: "35px",
     })
   };
-  
-  // Função auxiliar para criar as props do input
+
+  // cria as prop dos input
   const getInputProps = (name, value, setter, type = "text", required = true) => ({
     type,
     placeholder: name.charAt(0).toUpperCase() + name.slice(1).replace(/([A-Z])/g, ' $1'),
@@ -317,17 +317,17 @@ export default function Login() {
 
         <form onSubmit={enviar}>
           {/* Email */}
-          <input 
-            type="email" 
-            placeholder="Email" 
-            required 
+          <input
+            type="email"
+            placeholder="Email"
+            required
             {...getInputProps("email", email, setEmail, "email")}
           />
           {/* Senha */}
-          <input 
-            type="password" 
-            placeholder="Senha" 
-            required 
+          <input
+            type="password"
+            placeholder="Senha"
+            required
             {...getInputProps("senha", senha, setSenha, "password")}
           />
 
@@ -336,8 +336,8 @@ export default function Login() {
               {/* Nome */}
               <input type="text" placeholder="Nome Completo" required {...getInputProps("nome", nome, setNome)} />
 
-              {/* TIPO DE CONTA */}
-              <div style={{...styles.formSection, textAlign: "left" }}>
+              {/* tipos de conta */}
+              <div style={{ ...styles.formSection, textAlign: "left" }}>
                 <label style={{ display: "block", marginBottom: "8px", fontWeight: "600", color: FONT_COLOR_DARK }}>
                   Tipo de Conta:
                 </label>
@@ -354,17 +354,17 @@ export default function Login() {
                 </div>
               </div>
 
-              {/* CAMPOS PCD */}
+              {/* pcd */}
               {tipoUsuario === 'pcd' && (
                 <>
                   <input type="text" placeholder="CPF" required {...getInputProps("cpf", cpf, setCpf)} />
-                  {/* Mudança no placeholder para data ser mais clara, mesmo sendo tipo date */}
-                  <input type="date" placeholder="Data de Nascimento" required {...getInputProps("dataNascimentoPCD", dataNascimento, setDataNascimento, "date")} /> 
-                  {/* SELECT PRIMÁRIO (Deficiência) */}
-                  <select 
-                    style={styles.selectStyle(focusedInput === "deficiencia")} 
-                    value={deficiencia} 
-                    onChange={(e) => { setDeficiencia(e.target.value); setTipoDeficiencia('') }} 
+                  
+                  <input type="date" placeholder="Data de Nascimento" required {...getInputProps("dataNascimentoPCD", dataNascimento, setDataNascimento, "date")} />
+                  {/* selecionar deficiencia */}
+                  <select
+                    style={styles.selectStyle(focusedInput === "deficiencia")}
+                    value={deficiencia}
+                    onChange={(e) => { setDeficiencia(e.target.value); setTipoDeficiencia('') }}
                     onFocus={() => setFocusedInput("deficiencia")}
                     onBlur={() => setFocusedInput(null)}
                     required
@@ -377,15 +377,15 @@ export default function Login() {
                     <option value="multipla">Múltipla</option>
                     <option value="outra">Outra</option>
                   </select>
-                  {/* SELECT SECUNDÁRIO (Tipo Específico) */}
+                  {/* selecionar tipo */}
                   {deficiencia && (
-                    <select 
-                        style={styles.selectStyle(focusedInput === "tipoDeficiencia")} 
-                        value={tipoDeficiencia} 
-                        onChange={(e) => setTipoDeficiencia(e.target.value)} 
-                        onFocus={() => setFocusedInput("tipoDeficiencia")}
-                        onBlur={() => setFocusedInput(null)}
-                        required
+                    <select
+                      style={styles.selectStyle(focusedInput === "tipoDeficiencia")}
+                      value={tipoDeficiencia}
+                      onChange={(e) => setTipoDeficiencia(e.target.value)}
+                      onFocus={() => setFocusedInput("tipoDeficiencia")}
+                      onBlur={() => setFocusedInput(null)}
+                      required
                     >
                       <option value="">Selecione o tipo específico</option>
                       {deficiencia === "visual" && (<><option value="baixa-visao">Baixa visão</option><option value="cegueira-total">Cegueira total</option></>)}
@@ -399,7 +399,7 @@ export default function Login() {
                 </>
               )}
 
-              {/* CAMPOS EMPRESA */}
+              {/* empresa */}
               {tipoUsuario === 'empresa' && (
                 <>
                   <input type="text" placeholder="CNPJ" required {...getInputProps("cnpj", cnpj, setCnpj)} />
@@ -407,7 +407,7 @@ export default function Login() {
                 </>
               )}
 
-              {/* CAMPOS USUÁRIO INDIVIDUAL */}
+              {/* individual */}
               {tipoUsuario === 'Usuário Individual' && (
                 <>
                   <input type="text" placeholder="CPF" required {...getInputProps("cpf", cpf, setCpf)} />
@@ -429,19 +429,19 @@ export default function Login() {
 
         <div style={styles.or}>OU</div>
 
-        {/* Botão Google com Hover */}
+        {/* botao do google */}
         <ButtonWithHover style={styles.btnGoogle} onClick={handleGoogleLogin}>
           <FaGoogle size={20} color={ACCENT_COLOR} />
           Entrar com o Google
         </ButtonWithHover>
 
         <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", maxWidth: "100%", margin: "16px auto 0" }}>
-          {/* Link para alternar entre Login/Cadastro */}
+          {/* alterna em login/cadastro */}
           <button type="button" style={styles.linkBtn} onClick={() => setIsCadastro(!isCadastro)}>
             {isCadastro ? 'Já tem conta? Faça Login' : 'Não tem conta? Quero me cadastrar'}
           </button>
 
-          {/* Link Esqueci Senha */}
+          {/* esqeuci a senha */}
           {!isCadastro && (
             <button type="button" style={styles.linkBtn} onClick={handleEsqueciSenha}>
               Esqueci minha senha

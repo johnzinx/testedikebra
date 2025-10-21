@@ -11,9 +11,8 @@ export default function Notifications() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // --- Funções de Ação no Firebase ---
 
-  // Marca a notificação como lida no Firestore
+  // marca como lida no firestrore
   const handleMarkAsRead = async (id) => {
     try {
       const docRef = doc(db, 'notifications', id);
@@ -23,21 +22,20 @@ export default function Notifications() {
     }
   };
 
-  // AÇÃO: Iniciar Chat com o remetente (USA senderUid)
+  // iniciar chat com remetente
   const handleChat = (notification) => {
     handleMarkAsRead(notification.id);
     navigate(`/messages?startChatWith=${notification.senderUid}`); 
   };
 
-  // AÇÃO: Visualizar Perfil do remetente (USA senderUid)
+  // visualizar perfil remetente
   const handleViewProfile = (notification) => {
     handleMarkAsRead(notification.id);
-    // O UID do remetente é passado como parâmetro de rota para o componente Profile.jsx
     navigate(`/profile/${notification.senderUid}`);
   };
 
 
-  // Efeito para buscar notificações em tempo real
+  // tempo real notificação
   useEffect(() => {
     if (!user || !user.uid) {
       setLoading(false);
@@ -65,7 +63,7 @@ export default function Notifications() {
     return () => unsubscribe();
   }, [user]);
 
-  // --- Funções Auxiliares de Visualização ---
+  // funçao de visualizar
 
   const formatTime = (timestamp) => {
     const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -87,7 +85,7 @@ export default function Notifications() {
     }
   };
 
-  // --- Estilos Inline (Estilo Mantido) ---
+  // estilos
 
   const styles = {
     container: {
@@ -178,7 +176,7 @@ export default function Notifications() {
     },
   };
 
-  // --- Renderização Condicional ---
+
   
   return (
     <div style={styles.container}>
@@ -189,7 +187,7 @@ export default function Notifications() {
           notifications.map(n => (
             <li key={n.id} 
                 style={styles.card(n.read)}
-                // Remove o onClick do <li> e move para o ContentRow para evitar clique duplo com os botões
+                // ajuda a evitar o duplo click
             >
               <div style={styles.contentRow} onClick={() => handleMarkAsRead(n.id)}>
                 <div style={styles.icon}>{getIcon(n.type)}</div>
@@ -200,7 +198,7 @@ export default function Notifications() {
                 </div>
               </div>
               
-              {/* Botões de Ação: Aparece se houver senderUid E se não for uma notificação enviada por mim mesmo */}
+              
               {n.senderUid && n.senderUid !== user.uid && (
                 <div style={styles.actionButtons}>
                   <button 
@@ -221,7 +219,7 @@ export default function Notifications() {
           ))
         ) : (
           <p style={{ textAlign: 'center', color: '#6b7280', marginTop: '2rem' }}>
-            🎉 Nenhuma notificação nova por enquanto!
+             Nenhuma notificação nova por enquanto!
           </p>
         )}
       </ul>

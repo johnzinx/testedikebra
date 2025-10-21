@@ -48,7 +48,8 @@ export default function EditProfile() {
     navigate(`/profile/${id}`)
   }
 
-  if (loading) return <p className="text-center text-gray-600">Carregando dados...</p>
+  if (loading) return <p className="text-center text-gray-600">Carregando dados..
+.</p>
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">

@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from "react";
-// Adicionado 'setDoc' e 'where' ao import
 import {
   collection,
   doc,
@@ -16,15 +15,13 @@ import {
 } from "firebase/firestore";
 import { db } from "../services/firebase";
 import useAuthStore from "../store/useAuth";
-// Importado useLocation para ler parâmetros da URL
 import { useLocation } from "react-router-dom"; 
 
-// Função auxiliar para encontrar ou criar um chat
+// funcçao para encontrar ou criar um chat
 const findOrCreateChat = async (userUid, otherUid) => {
-  // Garante que a ordem dos UIDs seja consistente para fácil busca
   const participants = userUid < otherUid ? [userUid, otherUid] : [otherUid, userUid];
 
-  // 1. Busca o chat existente usando a array de participantes ordenada
+  // 1. ve o chat existente usando a array de participantes 
   const q = query(collection(db, "chats"), where("participants", "==", participants));
   const snapshot = await getDocs(q);
   let chatDoc = snapshot.docs[0];
@@ -45,7 +42,7 @@ const findOrCreateChat = async (userUid, otherUid) => {
 
 export default function Messages() {
   const { user, profileData } = useAuthStore();
-  const location = useLocation(); // Hook para acessar a URL
+  const location = useLocation(); 
   
   const [chats, setChats] = useState([]); 
   const [selectedChat, setSelectedChat] = useState(null);
@@ -53,26 +50,25 @@ export default function Messages() {
   const [newMessage, setNewMessage] = useState("");
   const bottomRef = useRef();
   
-  // Extrai o UID para iniciar o chat da URL (e.g., /messages?startChatWith=algumUID)
+  
   const queryParams = new URLSearchParams(location.search);
   const startChatWithUid = queryParams.get("startChatWith");
 
-  // Efeito para buscar ou criar o chat ao carregar o componente, se houver um UID externo
+  // buscar ou criar chat dps q carrega o componetne
   useEffect(() => {
     const initChatFromExternal = async () => {
       if (!startChatWithUid || !user?.uid) return;
 
-      // Verifica se o chat já está selecionado para evitar loops
       if (selectedChat?.otherUid === startChatWithUid) return;
 
-      // 1. Encontra/Cria o chat
+      // 1. encontra/cria o chat
       const { id: chatId } = await findOrCreateChat(user.uid, startChatWithUid);
 
-      // 2. Busca os dados do usuário externo
+      // 2. busca os dados do usuário
       const userSnap = await getDoc(doc(db, "users", startChatWithUid));
       let otherUserData = userSnap.exists() ? userSnap.data() : { nome: "Usuário Desconhecido" };
 
-      // 3. Seleciona o chat
+      // 3. seleciona o chat
       setSelectedChat({
         id: chatId,
         otherUid: startChatWithUid,
@@ -82,23 +78,23 @@ export default function Messages() {
         },
       });
       
-      // Limpa o parâmetro da URL para não tentar iniciar o chat novamente após a seleção
+     
       if (location.search.includes('startChatWith')) {
         window.history.replaceState(null, null, location.pathname);
       }
     };
 
-    // Só executa se houver um UID externo e o componente estiver pronto
+  
     if (startChatWithUid && user?.uid) {
       initChatFromExternal();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [startChatWithUid, user?.uid]);
 
 
-  // Busca os chats recentes
+  // busca os chats recentes
   useEffect(() => {
-    if (!user?.uid) return; // Garante que o usuário está logado
+    if (!user?.uid) return; // ve que o usuario ta logado
 
     const q = query(collection(db, "chats"));
     const unsubscribe = onSnapshot(q, async (snapshot) => {
@@ -129,7 +125,7 @@ export default function Messages() {
     return () => unsubscribe();
   }, [user?.uid]);
 
-  // Busca as mensagens
+  // busca as mensagens
   useEffect(() => {
     if (!selectedChat) return;
 
@@ -141,7 +137,7 @@ export default function Messages() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const msgs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setMessages(msgs);
-      // Desce o scroll para a última mensagem
+   
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     });
 
@@ -155,13 +151,13 @@ export default function Messages() {
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedChat) return;
 
-    // 1. Atualiza o campo 'lastMessageAt' do chat pai (para ordenação futura)
+
     await setDoc(doc(db, "chats", selectedChat.id), 
       { lastMessageAt: serverTimestamp() }, 
       { merge: true }
     );
 
-    // 2. Adiciona a nova mensagem
+    // add a mensagem
     await addDoc(collection(db, "chats", selectedChat.id, "messages"), {
       fromUid: user.uid,
       fromName: profileData?.nome || user.displayName || "Você",
@@ -176,21 +172,21 @@ export default function Messages() {
     if (!selectedChat) return;
     if (!window.confirm("Tem certeza que quer deletar este chat?")) return;
 
-    // Apaga mensagens do chat
+    // apaga as mensagens do chat
     const msgCol = collection(db, "chats", selectedChat.id, "messages");
     const snapshot = await getDocs(msgCol);
     for (let docSnap of snapshot.docs) {
       await deleteDoc(doc(db, "chats", selectedChat.id, "messages", docSnap.id));
     }
 
-    // Deleta o chat
+    // apaga o chat
     await deleteDoc(doc(db, "chats", selectedChat.id));
     setSelectedChat(null);
   };
 
   return (
     <div style={styles.container}>
-      {/* SIDEBAR: Lista de Chats */}
+      {/* lista de Chats */}
       <div style={styles.sidebar}>
           <h3 style={styles.sidebarTitle}>Chats Recentes</h3>
           {chats.length === 0 && <p style={{ textAlign: "center", fontSize: '0.9rem' }}>Nenhum chat</p>}
@@ -212,7 +208,7 @@ export default function Messages() {
           </ul>
       </div>
     
-      {/* CHAT WINDOW: Janela de Mensagens */}
+      {/* janela das mensagens */}
       <div style={styles.chatWindow}>
           {selectedChat ? (
             <>
@@ -273,6 +269,7 @@ export default function Messages() {
   );
 }
 
+//estilos
 const styles = {
   container: {
     display: "flex",
@@ -284,7 +281,7 @@ const styles = {
   },
   sidebar: {
     minWidth: "250px",
-    flex: "0 0 25%", // Ocupa 25% da largura no desktop
+    flex: "0 0 25%", 
     border: "1px solid #E53E3E",
     borderRadius: "8px",
     padding: "0.5rem",

@@ -4,7 +4,7 @@ import useAuthStore from '../store/useAuth';
 
 export default function Settings() {
   const { user, logout } = useAuth();
-  const [openSection, setOpenSection] = useState(null); // Para controlar qual seção está aberta
+  const [openSection, setOpenSection] = useState(null); 
   const { profileData } = useAuthStore();
    
   const dadosCarregados = profileData;
@@ -19,13 +19,13 @@ export default function Settings() {
     setOpenSection(openSection === sectionName ? null : sectionName);
   };
 
-  // --- ESTILOS INLINE PARA UM DESIGN MODERNO ---
+  // nossa paleta
   const colors = {
-    primary: '#E53E3E', // Vermelho (Seu tema)
-    background: '#f8f8f8', // Fundo claro
-    cardBg: '#ffffff', // Fundo do cartão
-    text: '#2d3748', // Texto principal
-    textMuted: '#718096', // Texto secundário
+    primary: '#E53E3E', // Vermelho
+    background: '#f8f8f8', 
+    cardBg: '#ffffff', 
+    text: '#2d3748', 
+    textMuted: '#718096', 
     hover: '#f2f2f2',
     danger: '#E53E3E',
   };
@@ -56,7 +56,7 @@ export default function Settings() {
       borderBottom: `2px solid ${colors.primary}`,
       paddingBottom: '0.5rem',
     },
-    // Estilo para o item principal de configurações (o que se expande)
+    // estilo item principal 
     settingItem: (isOpen) => ({
       backgroundColor: isOpen ? colors.hover : colors.cardBg,
       padding: '1.25rem 1.5rem',
@@ -85,7 +85,7 @@ export default function Settings() {
       fontSize: '0.85rem',
       color: colors.textMuted,
     },
-    // Estilo para o conteúdo expandido
+    // estilo conteudo expandido
     contentArea: {
       padding: '1rem 1.5rem 1.5rem 1.5rem',
       backgroundColor: colors.cardBg,
@@ -98,7 +98,7 @@ export default function Settings() {
       fontSize: '1rem',
       color: colors.text,
     },
-    // Botões
+    // botoes
     buttonOutline: {
       ...buttonBase,
       backgroundColor: 'transparent',

@@ -3,12 +3,12 @@ import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import useAuth from '../store/useAuth';
 
-// === PALETA DE CORES PROFISSIONALIZADA (Mantenha a consistência) ===
+// nss paleta
 const FONT_COLOR_DARK = "#1A1A1A";      
 const ACCENT_COLOR = "#CF0908";         
 const PRIMARY = "#FFFFFF";              
 const BACKGROUND_COLOR = "#1A1A1A";     
-const BORDER_COLOR = "#D9D9D9"; // Mantido como BORDER_COLOR para inputs
+const BORDER_COLOR = "#D9D9D9"; 
 const CARD_BACKGROUND = "#FFFFFF";
 const LIGHT_BACKGROUND = "#ECECEC"; 
 const YELLOW_ACCENT = "#E6E69D";
@@ -26,7 +26,7 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
     deficiencia: '',
     fotoURL: '',
     tipoUsuario: '',
-    cpf: '', // Usado por PCD e Usuário Individual
+    cpf: '', // pros pcd e individual
     cnpj: '',
     razaoSocial: '',
   });
@@ -42,10 +42,10 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
 
   const isMeuPerfil = !perfilUsuarioExterno || perfilUsuarioExterno.uid === usuarioLogado?.uid;
 
-  // Lista de tipos de deficiência (Para o primeiro SELECT/exibição)
+  // lista dos tiposd de deficiencia
   const tiposDeficienciaDisplay = ['Visual', 'Auditiva', 'Física', 'Intelectual', 'Múltipla', 'Outra'];
   
-  // Objeto de opções com CHAVES EM MINÚSCULAS para corresponder ao valor salvo no state
+ 
   const opcoesDeficiencia = {
     'visual': ['baixa-visao', 'cegueira-total'],
     'auditiva': ['surdez-parcial', 'surdez-total'],
@@ -68,7 +68,7 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
       const dadosCarregados = perfilUsuarioExterno ? perfilUsuarioExterno : profileData;
 
       if (dadosCarregados) {
-        // Garantindo que todos os campos sejam carregados
+        // garante q tudo abaxio ta carregado
         setPerfil({
           nome: dadosCarregados.nome || '',
           telefone: dadosCarregados.telefone || '',
@@ -77,29 +77,29 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
           tipoDeficiencia: dadosCarregados.tipoDeficiencia || '',
           deficiencia: dadosCarregados.deficiencia || '',
           fotoURL: dadosCarregados.fotoURL || '',
-          tipoUsuario: dadosCarregados.tipoUsuario || 'pcd', // Default para 'pcd' se não existir
+          tipoUsuario: dadosCarregados.tipoUsuario || 'pcd', 
           cpf: dadosCarregados.cpf || '',
           cnpj: dadosCarregados.cnpj || '',
           razaoSocial: dadosCarregados.razaoSocial || '',
         });
         
         if (isMeuPerfil && !dadosCarregados.nome) {
-          setIsEditing(true); // Entra em modo edição se for o próprio usuário e o nome não estiver preenchido
+          setIsEditing(true); // modo de edição
         } else {
           setIsEditing(false);
         }
       } else if (usuarioLogado) {
-        // Usuário logado mas sem dados de perfil ainda
+     
         setPerfil((prev) => ({
           ...prev,
           email: usuarioLogado.email,
           nome: usuarioLogado.displayName || '',
           fotoURL: usuarioLogado.photoURL || '',
-          tipoUsuario: 'pcd', // Assumir default para usuários logados
+          tipoUsuario: 'pcd', 
         }));
         setIsEditing(true);
       } else {
-        // Usuário não logado e não há perfil externo para carregar
+        // usuario não ta logado e não tem perfil pra carregar
         setPerfil({
           nome: '', telefone: '', email: '', dataNascimento: '', tipoDeficiencia: '', 
           deficiencia: '', fotoURL: '', tipoUsuario: 'pcd', cpf: '', cnpj: '', razaoSocial: '',
@@ -115,7 +115,6 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    // Se mudar a deficiência principal, limpa o tipo específico
     if (name === 'deficiencia') {
         setPerfil((prev) => ({ ...prev, [name]: value, tipoDeficiencia: '' }));
     } else {
@@ -154,10 +153,10 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
 
         const data = await response.json();
         novaFotoURL = data.secure_url;
-        updateProfilePicture(novaFotoURL); // Atualiza o contexto de autenticação com a nova foto
+        updateProfilePicture(novaFotoURL); // atualiza a foto nova
       }
       
-      // Limpa dados irrelevantes antes de salvar, dependendo do tipo de usuário
+      // limpa dados inuteis
       let dadosParaSalvar = {
         ...perfil,
         nome: perfil.nome || usuarioLogado.displayName || '',
@@ -196,7 +195,7 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
     }
   };
 
-  // Estilos inline otimizados
+  // estilos
   const containerWidth = windowWidth > 768 ? '28rem' : '90%';
   const inputStyle = { padding: '0.75rem', borderRadius: '9999px', border: `1px solid ${BORDER_COLOR}` };
   const buttonStyle = { padding: '0.75rem', borderRadius: '9999px', fontWeight: 'bold', backgroundColor: "red", border: 'none', cursor: 'pointer', transition: 'background-color 0.2s' };
@@ -238,7 +237,7 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
                 Telefone: {perfil.telefone || 'Não informado'}
             </div>
 
-            {/* BLOCO: PCD */}
+            {/* PCD */}
             {perfil.tipoUsuario === 'pcd' && (
               <>
                 <div style={viewItemStyle}>
@@ -260,7 +259,7 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
               </>
             )}
 
-            {/* BLOCO: EMPRESA */}
+            {/* EMPRESA */}
             {perfil.tipoUsuario === 'empresa' && (
               <>
                 <div style={viewItemStyle}>
@@ -272,7 +271,7 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
               </>
             )}
 
-            {/* BLOCO: USUÁRIO INDIVIDUAL */}
+            {/* USUaRIO INDIVIDUAL */}
             {perfil.tipoUsuario === 'Usuário Individual' && (
               <>
                 <div style={viewItemStyle}>
@@ -289,7 +288,7 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
         </div>
       )}
 
-      {/* TELA DE EDIÇÃO */}
+      {/* tela de edição */}
       {isEditing && isMeuPerfil && (
         <div style={{ width: containerWidth, backgroundColor: CARD_BACKGROUND, borderRadius: '1.5rem', boxShadow: SHADOW_LIGHT, padding: '1.5rem', marginTop: '4rem', position: 'relative' }}>
           <button onClick={() => setIsEditing(false)} style={{ position: 'absolute', left: '1rem', top: '1rem', width: '2.5rem', height: '2.5rem', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: BORDER_COLOR, border: 'none', cursor: 'pointer', color: FONT_COLOR_DARK, fontSize: '1rem' }}>←</button>
@@ -303,7 +302,6 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {/* Opções de Rádio (Para trocar o tipo de usuário) */}
             <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '1rem', flexWrap: 'wrap' }}>
               <label style={{ display: 'flex', alignItems: 'center', color: FONT_COLOR_DARK }}>
                 <input type="radio" name="tipoUsuario" value="pcd" checked={perfil.tipoUsuario === 'pcd'} onChange={handleChange} style={{ marginRight: '0.5rem' }} disabled={uploading} />
@@ -319,7 +317,7 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
               </label>
             </div>
 
-            {/* Campos Comuns (Nome e Telefone) */}
+            {/* Nome e Telefone */}
             <input 
               type="text" 
               name="nome" 
@@ -332,14 +330,14 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
             <input 
               type="tel" 
               name="telefone" 
-              placeholder="Telefone (opcional)" 
+              placeholder="Telefone (obrigatorio)" 
               value={perfil.telefone} 
               onChange={handleChange} 
               style={inputStyle} 
               disabled={uploading} 
             />
 
-            {/* BLOCO: PCD */}
+            {/*PCD */}
             {perfil.tipoUsuario === 'pcd' && (
               <>
                 <input type="text" name="cpf" placeholder="CPF" value={perfil.cpf} onChange={handleChange} style={inputStyle} disabled={uploading} />
@@ -351,7 +349,7 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
                   {tiposDeficienciaDisplay.map((tipo) => <option key={tipo} value={tipo.toLowerCase()}>{tipo}</option>)}
                 </select>
 
-                {/* Tipo Específico (CORRIGIDO com '|| []' e chave minúscula) */}
+                {/* Tipo Especifico*/}
                 <select 
                   name="tipoDeficiencia" 
                   value={perfil.tipoDeficiencia} 
@@ -367,7 +365,7 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
               </>
             )}
 
-            {/* BLOCO: EMPRESA */}
+            {/* EMPRESA */}
             {perfil.tipoUsuario === 'empresa' && (
               <>
                 <input type="text" name="razaoSocial" placeholder="Razão Social" value={perfil.razaoSocial} onChange={handleChange} style={inputStyle} disabled={uploading} />
@@ -375,7 +373,7 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
               </>
             )}
 
-            {/* BLOCO: USUÁRIO INDIVIDUAL */}
+            {/* USURIO INDIVIDUAL */}
             {perfil.tipoUsuario === 'Usuário Individual' && (
               <>
                 <input type="text" name="cpf" placeholder="CPF" value={perfil.cpf} onChange={handleChange} style={inputStyle} disabled={uploading} />
