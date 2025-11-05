@@ -2,7 +2,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { FaGoogle } from 'react-icons/fa';
-import DikebraLogo from '../img/logodkebra.jpg';
+import DikebraLogo from '../img/novalogo.jpg';
 
 
 export default function Home() {
@@ -49,8 +49,7 @@ export default function Home() {
       minHeight: "100vh",
       width: "100%",
       padding: isDesktop ? "0 3rem" : "0 2rem",
-      backgroundColor: BACKGROUND_COLOR,
-      backgroundImage: `radial-gradient(circle at center, #2d2d2d 0%, ${BACKGROUND_COLOR} 100%)`,
+      backgroundColor: "#1A1A1A",
       textAlign: "center",
       position: "relative",
     },
@@ -101,7 +100,6 @@ export default function Home() {
       width: isDesktop ? "90px" : "70px",
       height: "auto",
       borderRadius: "8px",
-      zIndex: 10, // 
     }
   };
 

@@ -10,7 +10,7 @@ import {
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
 import { FaGoogle } from "react-icons/fa";
-import LogoImg from '../img/logodkebra.jpg';
+import LogoImg from '../img/novalogo.jpg';
 
 // nossa paleta 
 const FONT_COLOR_DARK = "#1A1A1A";
