@@ -1,731 +1,325 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
-    FiPlus,
-    FiBriefcase,
-    FiMapPin,
-    FiCalendar,
-    FiBookmark,
-    FiX,
-    FiTarget,
-    FiDollarSign,
-    FiGlobe,
-    FiLayers,
-    FiFileText,
-    FiEdit3,
-    FiTrash2, 
-    FiZap, 
+  FiPlus, FiBriefcase, FiMapPin, FiCalendar, FiBookmark, FiX,
+  FiTarget, FiDollarSign, FiGlobe, FiLayers, FiFileText,
+  FiEdit3, FiTrash2, FiZap
 } from "react-icons/fi";
-import { 
-    collection, 
-    addDoc, 
-    onSnapshot, 
-    query, 
-    orderBy, 
-    serverTimestamp,
-    doc, 
-    deleteDoc 
+import {
+  collection, addDoc, onSnapshot, query, orderBy,
+  serverTimestamp, doc, deleteDoc
 } from "firebase/firestore";
 import { db } from "../services/firebase";
-import useAuthStore from '../store/useAuth'; 
+import useAuthStore from "../store/useAuth";
+import { Toaster, toast } from "react-hot-toast";
 
-// 1. CONSTANTES DE ESTILO E DADOS
-const FONT_COLOR_DARK = "#1A1A1A";       
-const ACCENT_COLOR = "#CF0908";           
-const PRIMARY_COLOR = ACCENT_COLOR;      
-const CARD_BACKGROUND = "#FFFFFF";
-const LIGHT_BACKGROUND = "#ECECEC"; 
-const BORDER_COLOR = "#D9D9D9"; 
-const SHADOW_LIGHT = "0 6px 10px rgba(0,0,0,0.08)"; 
-const SUCCESS_COLOR = "#48BB78"; 
-const CANCEL_COLOR = "#E53E3E"; 
-const SUCCESS_BACKGROUND = "#E6FFFA";
-
-// Constantes de Dados
-const RAMOS_ATUACAO = ['Tecnologia', 'Saúde', 'Finanças', 'Educação', 'Varejo', 'Serviços', 'Indústria', 'Outro'];
-const EXPERIENCIA_OPCOES = ['Estágio', 'Júnior', 'Pleno', 'Sênior', 'Especialista'];
-const MODALIDADES = ['Remoto', 'Presencial', 'Híbrido'];
-const TIPOS_DEFICIENCIA_MODAL = ['Visual', 'Auditiva', 'Fisica', 'Intelectual', 'Múltipla', 'Outra', 'Qualquer'];
-
-const INITIAL_NEW_JOB_STATE = {
-    title: "",
-    company: "",
-    location: "",
-    deficiencia: "",
-    description: "",
-    salary: "",
-    ramo: "",
-    experience: "",
-    modalidade: "",
-    empresaNome: "",
+/* -------------------------
+  Constantes e dados
+------------------------- */
+const COLORS = {
+  primary: "#CF0908",
+  dark: "#1A1A1A",
+  card: "#FFFFFF",
+  lightBg: "#ECECEC",
+  border: "#D9D9D9",
+  success: "#48BB78",
+  cancel: "#E53E3E",
+  successBg: "#E6FFFA"
 };
+const RAMOS = ["Tecnologia","Saúde","Finanças","Educação","Varejo","Serviços","Indústria","Outro"];
+const EXPERIENCIA = ["Estágio","Júnior","Pleno","Sênior","Especialista"];
+const MODALIDADES = ["Remoto","Presencial","Híbrido"];
+const TIPOS_DEF = ["Visual","Auditiva","Fisica","Intelectual","Múltipla","Outra","Qualquer"];
+const INITIAL_JOB = { title:"", company:"", location:"", deficiencia:"", description:"", salary:"", ramo:"", experience:"", modalidade:"", empresaNome:"", fotoPerfil:"" };
 
-// =========================================================================
-// 🚨 FUNÇÃO AUXILIAR PARA ENVIAR NOTIFICAÇÃO
-// =========================================================================
+/* -------------------------
+  Componente Jobs
+------------------------- */
+export default function Jobs(){
+  const { user, profileData } = useAuthStore();
+  const isEmpresa = profileData?.tipoUsuario === "empresa";
+  const isCandidato = profileData?.tipoUsuario === "pcd" || profileData?.tipoUsuario === "Usuário Individual";
 
-const sendApplicationNotification = async (job, user, profileData) => {
-    const recipientUid = job.empresaUid;
-    const senderName = profileData?.nome || user?.displayName || 'Candidato Desconhecido';
+  const [jobs, setJobs] = useState([]);
+  const [appliedJobs, setAppliedJobs] = useState([]);
+  const [savedJobs, setSavedJobs] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [view, setView] = useState("explorar");
+  const [filterDef, setFilterDef] = useState("todas");
+  const [w, setW] = useState(window.innerWidth);
+  const isMobile = w < 768;
 
-    if (!recipientUid || !user?.uid) {
-        console.error("Falha ao enviar notificação: UID do destinatário ou do remetente ausente.");
-        return;
-    }
+  // snapshot vagas
+  useEffect(()=>{
+    const q = query(collection(db,"vagas"), orderBy("postedAt","desc"));
+    const unsub = onSnapshot(q, s=>{
+      setJobs(s.docs.map(d=>({ id:d.id, ...d.data() })));
+    }, e=>console.error("Erro vagas:", e));
+    return () => unsub();
+  },[]);
 
+  // carregar applied/saved por usuário
+  useEffect(()=>{
+    if (!user?.uid){ setAppliedJobs([]); setSavedJobs([]); return; }
     try {
-        await addDoc(collection(db, "notifications"), {
-            recipientUid: recipientUid, // UID da empresa que postou a vaga
-            title: "Nova Candidatura! 📥",
-            message: `${senderName} se candidatou à sua vaga: "${job.title}".`,
-            type: "application", 
-            senderUid: user.uid, // UID do candidato
-            jobTitle: job.title,
-            jobId: job.id,
-            read: false,
-            timestamp: serverTimestamp(), // Campo de ordenação usado no Notifications.js
-        });
-        console.log(`Notificação de candidatura para a vaga "${job.title}" enviada com sucesso.`);
-    } catch (error) {
-        console.error("Erro ao enviar notificação:", error);
+      const aKey = `appliedJobs_${user.uid}`, sKey = `savedJobs_${user.uid}`;
+      setAppliedJobs(JSON.parse(localStorage.getItem(aKey)) || []);
+      setSavedJobs(JSON.parse(localStorage.getItem(sKey)) || []);
+    } catch (e){ console.error("Erro localStorage:", e); setAppliedJobs([]); setSavedJobs([]); }
+  },[user]);
+
+  // persist applied
+  useEffect(()=>{ if (!user?.uid) return; try{ localStorage.setItem(`appliedJobs_${user.uid}`, JSON.stringify(appliedJobs)); }catch(e){console.error(e);} },[appliedJobs,user]);
+  // persist saved
+  useEffect(()=>{ if (!user?.uid) return; try{ localStorage.setItem(`savedJobs_${user.uid}`, JSON.stringify(savedJobs)); }catch(e){console.error(e);} },[savedJobs,user]);
+
+  useEffect(()=>{ const handleResize=()=>setW(window.innerWidth); window.addEventListener("resize",handleResize); return ()=>window.removeEventListener("resize",handleResize); },[]);
+
+  const formatDef = d=>{
+    if (!d) return "Não Especificado";
+    if (d==="qualquer") return "Qualquer Pessoa / Público Geral";
+    return d.charAt(0).toUpperCase()+d.slice(1);
+  };
+
+  const handleDeleteJob = async(job)=>{
+    if(!isEmpresa || job.empresaUid !== user.uid){ toast.error("Você não tem permissão para excluir esta vaga."); return; }
+    const ok = window.confirm(`Excluir vaga "${job.title}"? Esta ação é irreversível.`);
+    if(!ok) return;
+    try{ await deleteDoc(doc(db,"vagas",job.id)); setSelectedJob(null); toast.success("Vaga excluída."); }
+    catch(e){ console.error(e); toast.error("Erro ao excluir vaga."); }
+  };
+
+  // candidatura: salva por usuário e envia notificação só para empresa dona da vaga
+  const handleApply = async(job)=>{
+    if(!user?.uid || !isCandidato){ toast.error("Faça login como candidato para se candidatar."); return; }
+    if(job.empresaUid === user.uid){ toast.error("Empresas não podem se candidatar às próprias vagas."); return; }
+
+    const already = appliedJobs.some(j=>j.id===job.id);
+    if(already){
+      setAppliedJobs(prev=> prev.filter(j=>j.id!==job.id));
+      toast("Candidatura cancelada.");
+      return;
     }
-};
-
-
-// =========================================================================
-// 2. COMPONENTE PRINCIPAL JOBS
-// =========================================================================
-
-export default function Jobs() {
-    const { user, profileData } = useAuthStore(); 
-    const isEmpresa = profileData?.tipoUsuario === 'empresa';
-    const isCandidato = profileData?.tipoUsuario === 'pcd' || profileData?.tipoUsuario === 'Usuário Individual'; 
-
-    const [jobs, setJobs] = useState([]);
-    
-    // 🎯 CORREÇÃO PERSISTÊNCIA: Leitura do localStorage na inicialização do useState
-    const [appliedJobs, setAppliedJobs] = useState(() => {
-        try {
-            const storedValue = localStorage.getItem("appliedJobs");
-            // Se houver valor, parse; senão, array vazio.
-            return storedValue ? JSON.parse(storedValue) : []; 
-        } catch (error) {
-            console.error("Erro ao ler appliedJobs do localStorage:", error);
-            return [];
-        }
-    });
-    
-    // 🎯 CORREÇÃO PERSISTÊNCIA: Leitura do localStorage na inicialização do useState
-    const [savedJobs, setSavedJobs] = useState(() => {
-        try {
-            const storedValue = localStorage.getItem("savedJobs");
-            // Se houver valor, parse; senão, array vazio.
-            return storedValue ? JSON.parse(storedValue) : [];
-        } catch (error) {
-            console.error("Erro ao ler savedJobs do localStorage:", error);
-            return [];
-        }
-    });
-
-    const [isModalOpen, setIsModalOpen] = useState(false); 
-    const [selectedJob, setSelectedJob] = useState(null); 
-    const [view, setView] = useState(isEmpresa ? "minhas" : "explorar"); 
-    const [filterDeficiencia, setFilterDeficiencia] = useState("todas");
-    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-
-    const isMobile = windowWidth < 768;
-
-    // useEffect para buscar vagas do Firestore
-    useEffect(() => {
-        const q = query(collection(db, "vagas"), orderBy("postedAt", "desc"));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const vagasData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setJobs(vagasData);
-        }, (error) => {
-            console.error("Erro ao buscar vagas: ", error);
+    const updated=[...appliedJobs, job];
+    setAppliedJobs(updated);
+    // enviar notificação
+    try{
+      if(job.empresaUid && job.empresaUid !== user.uid){
+        await addDoc(collection(db,"notifications"), {
+          recipientUid: job.empresaUid,
+          senderUid: user.uid,
+          senderName: profileData?.nome || user.displayName || "Candidato",
+          jobId: job.id,
+          jobTitle: job.title,
+          type: "application",
+          message: `${profileData?.nome || user.displayName || "Um candidato"} se candidatou: ${job.title}`,
+          createdAt: serverTimestamp(),
+          read: false
         });
-        return () => unsubscribe();
-    }, []);
+      }
+    }catch(e){ console.error("Erro notificação:", e); }
+    toast.success("Candidatura enviada!");
+  };
 
-    // 🎯 useEffect para SALVAR appliedJobs no localStorage sempre que mudar
-    useEffect(() => {
-        localStorage.setItem("appliedJobs", JSON.stringify(appliedJobs));
-    }, [appliedJobs]);
+  const handleSave = (job)=>{
+    if(!user?.uid || !isCandidato){ toast.error("Faça login para salvar vagas."); return; }
+    const already = savedJobs.some(j=>j.id===job.id);
+    const updated = already ? savedJobs.filter(j=>j.id!==job.id) : [...savedJobs, job];
+    setSavedJobs(updated);
+    toast(already ? "Removido dos salvos." : "Vaga salva.");
+  };
 
-    // 🎯 useEffect para SALVAR savedJobs no localStorage sempre que mudar
-    useEffect(() => {
-        localStorage.setItem("savedJobs", JSON.stringify(savedJobs));
-    }, [savedJobs]);
+  const getFilteredJobs = ()=>{
+    let list = jobs;
+    if(view==="candidatadas") list = appliedJobs;
+    else if(view==="salvas") list = savedJobs;
+    else if(isEmpresa && user) list = jobs.filter(j=>j.empresaUid===user.uid);
+    if(filterDef==="todas" || isEmpresa) return list;
+    const v = filterDef.toLowerCase();
+    return list.filter(j=> j.deficiencia===v || j.deficiencia==="qualquer");
+  };
 
-    useEffect(() => {
-        const handleResize = () => setWindowWidth(window.innerWidth);
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, []);
+  const displayed = getFilteredJobs();
 
-    const handleDeleteJob = async (job) => {
-        if (!isEmpresa || job.empresaUid !== user.uid) {
-            alert("Você não tem permissão para excluir esta vaga.");
-            return;
-        }
+  /* -------------------------
+     Estilos compactos (mantive visual)
+  ------------------------- */
+  const styles = useMemo(()=>({
+    container:{ padding:isMobile?"1rem":"2rem", maxWidth:1200, margin:"0 auto", background:COLORS.lightBg, minHeight:"100vh" },
+    header:{ display:"flex", flexDirection:isMobile?"column":"row", justifyContent:"space-between", alignItems:isMobile?"stretch":"center", marginBottom:16 },
+    navButtons:{ display:"flex", gap:8, flexWrap:"wrap", justifyContent:isMobile?"center":"flex-end" },
+    navButton:(active)=>({ padding:isMobile?"6px 12px":"8px 16px", borderRadius:999, border:`2px solid ${COLORS.primary}`, background: active?COLORS.primary:"transparent", color: active?"#fff":COLORS.primary, fontWeight:700, cursor:"pointer" }),
+    jobsGrid:{ display:"grid", gridTemplateColumns:isMobile?"1fr":"repeat(auto-fill,minmax(340px,1fr))", gap:16 },
+    jobCard:(applied)=>({ border:`1px solid ${applied?COLORS.success:COLORS.border}`, borderRadius:16, padding:isMobile?12:16, background: applied?COLORS.successBg:COLORS.card, boxShadow:"0 6px 10px rgba(0,0,0,0.08)" }),
+    detailButton:{ background:"none", border:`1px solid ${COLORS.primary}`, color:COLORS.primary, borderRadius:999, padding:"8px 12px", cursor:"pointer" },
+    buttonRow:{ display:"flex", gap:8, marginTop:8, flexWrap:"wrap" },
+    primaryBtn:(active)=>({ background:COLORS.success, color:"#fff", border:"none", padding:"8px 12px", borderRadius:999, cursor:"pointer" }),
+    secondaryBtn:(active)=>({ background: active?COLORS.primary:COLORS.border, color: active?"#fff":COLORS.dark, border:"none", padding:"8px 12px", borderRadius:999, cursor:"pointer" })
+  }),[isMobile]);
 
-        if (window.confirm(`Tem certeza que deseja excluir a vaga: "${job.title}"? Esta ação é irreversível.`)) {
-            try {
-                const jobRef = doc(db, "vagas", job.id);
-                await deleteDoc(jobRef);
-                setSelectedJob(null); 
-                alert("Vaga excluída com sucesso!");
-            } catch (error) {
-                console.error("Erro ao excluir vaga:", error);
-                alert("Ocorreu um erro ao tentar excluir a vaga.");
-            }
-        }
+  /* -------------------------
+     Modal de criar vaga (compacto)
+  ------------------------- */
+  const NewJobModal = ({onClose})=>{
+    const [newJob, setNewJob] = useState({...INITIAL_JOB, company: profileData?.nome||user?.displayName||"", empresaNome: profileData?.nome||user?.displayName||"Empresa Desconhecida", deficiencia:TIPOS_DEF[0].toLowerCase(), ramo:RAMOS[0], experience:EXPERIENCIA[0], modalidade:MODALIDADES[0]} );
+    const change = e=> setNewJob(p=>({...p,[e.target.name]: e.target.value}));
+    const valid = v=> typeof v==="string"? v.trim().length>0 : !!v;
+    const add = async ()=>{
+      const required=['title','location','deficiencia','description','ramo','experience','modalidade'];
+      if(!required.every(f=>valid(newJob[f]))){ toast.error("Preencha todos campos obrigatórios."); return; }
+      try{ await addDoc(collection(db,"vagas"),{ ...newJob, deficiencia:newJob.deficiencia.toLowerCase(), empresaUid:user.uid, postedAt:serverTimestamp(), company:newJob.company, empresaNome:newJob.empresaNome, fotoPerfil:newJob.fotoPerfil }); onClose(); toast.success("Vaga publicada."); }
+      catch(e){ console.error(e); toast.error("Erro ao publicar vaga."); }
     };
+    return (
+      <div style={{position:"fixed",top:0,left:0,width:"100vw",height:"100vh",background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:999}}>
+        <div style={{background:COLORS.card,padding:16,borderRadius:12,maxWidth:600,width:"95%",boxSizing:"border-box"}}>
+          <button onClick={onClose} style={{float:"right",background:"none",border:"none",cursor:"pointer"}}><FiX/></button>
+          <h3 style={{color:COLORS.primary,textAlign:"center"}}><FiPlus/> Publicar Nova Vaga</h3>
+          <input name="title" placeholder="Título" value={newJob.title} onChange={change} style={{width:"100%",padding:8,borderRadius:8,marginTop:8}}/>
+          <input name="location" placeholder="Localização" value={newJob.location} onChange={change} style={{width:"100%",padding:8,borderRadius:8,marginTop:8}}/>
+          <input name="salary" placeholder="Salário" value={newJob.salary} onChange={change} style={{width:"100%",padding:8,borderRadius:8,marginTop:8}}/>
+          <textarea name="description" placeholder="Descrição" value={newJob.description} onChange={change} style={{width:"100%",padding:8,borderRadius:8,marginTop:8}}/>
+          <div style={{display:"flex",gap:8,marginTop:8}}>
+            <select name="ramo" value={newJob.ramo} onChange={change} style={{flex:1}}>{RAMOS.map(r=> <option key={r} value={r}>{r}</option>)}</select>
+            <select name="experience" value={newJob.experience} onChange={change} style={{flex:1}}>{EXPERIENCIA.map(e=> <option key={e} value={e}>{e}</option>)}</select>
+          </div>
+          <div style={{display:"flex",gap:8,marginTop:8}}>
+            <select name="modalidade" value={newJob.modalidade} onChange={change} style={{flex:1}}>{MODALIDADES.map(m=> <option key={m} value={m}>{m}</option>)}</select>
+            <select name="deficiencia" value={newJob.deficiencia} onChange={change} style={{flex:1}}>{TIPOS_DEF.map(t=> <option key={t} value={t.toLowerCase()}>{t}</option>)}</select>
+          </div>
+          <div style={{display:"flex",gap:8,marginTop:12}}>
+            <button onClick={add} style={{padding:"8px 12px",background:COLORS.success,color:"#fff",border:"none",borderRadius:999}}>Publicar</button>
+            <button onClick={onClose} style={{padding:"8px 12px",border:"none",borderRadius:999}}>Cancelar</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+ /* -------------------------
+    Job detail modal atualizado com foto
+ ------------------------- */
+ const JobDetailModal = ({job,onClose})=>{
+    const isApplied = appliedJobs.some(j=>j.id===job.id);
+    const isSaved = savedJobs.some(j=>j.id===job.id);
+    const posted = job.postedAt?.toDate ? job.postedAt.toDate() : new Date();
+    const isOwner = isEmpresa && user && job.empresaUid === user.uid;
     
-    // 🚨 handleApply com Notificação Integrada
-    const handleApply = async (job) => {
-        if (!user || !isCandidato) {
-            alert("Você precisa estar logado como Candidato (PCD ou Individual) para se candidatar!");
-            return;
-        }
-        
-        if (job.empresaUid === user.uid) {
-             alert("Empresas não podem se candidatar às suas próprias vagas.");
-             return;
-        }
-
-        const isAlreadyApplied = appliedJobs.some((j) => j.id === job.id);
-
-        if (isAlreadyApplied) {
-            // Cancelar Candidatura
-            setAppliedJobs((prev) => prev.filter((j) => j.id !== job.id));
-            alert(`Candidatura para "${job.title}" cancelada.`);
-        } else {
-            // Candidatar-se
-            setAppliedJobs((prev) => [...prev, job]);
-            // CHAMA A FUNÇÃO DE NOTIFICAÇÃO
-            await sendApplicationNotification(job, user, profileData); 
-            
-            alert(`Candidatura para "${job.title}" enviada com sucesso!`);
-        }
+    const modalContentStyle = {
+      background: COLORS.card,
+      padding: isMobile ? 20 : 30,
+      borderRadius: 20,
+      maxWidth: 720,
+      width: "95%",
+      maxHeight: "90vh",
+      overflowY: "auto",
+      boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
+      boxSizing: "border-box"
     };
-
-    const handleSave = (job) => {
-        if (!isCandidato) return; 
-        if (savedJobs.some((j) => j.id === job.id)) {
-            setSavedJobs((prev) => prev.filter((j) => j.id !== job.id));
-        } else {
-            setSavedJobs((prev) => [...prev, job]);
-        }
-    };
-
-    const getFilteredJobs = () => {
-        const listToFilter = view === "explorar" || view === "minhas" ? jobs : view === "candidatadas" ? appliedJobs : savedJobs;
-        
-        let filteredList = listToFilter;
-
-        if (isEmpresa && user && view === "explorar") {
-             filteredList = listToFilter.filter(job => job.empresaUid !== user.uid);
-        } else if (isEmpresa && user && view === "minhas") {
-             filteredList = listToFilter.filter(job => job.empresaUid === user.uid);
-        }
-
-        if (filterDeficiencia === "todas" || isEmpresa) {
-            return filteredList;
-        } else {
-            const filterValue = filterDeficiencia.toLowerCase();
-            return filteredList.filter(job => 
-                job.deficiencia === filterValue || 
-                job.deficiencia === 'qualquer'
-            );
-        }
-    }
-
-    const displayedJobs = getFilteredJobs();
-
-    const formatDeficiencia = (deficiencia) => {
-        if (!deficiencia) return 'Não Especificado';
-        if (deficiencia === 'qualquer') return 'Qualquer Pessoa / Público Geral';
-        return deficiencia.charAt(0).toUpperCase() + deficiencia.slice(1);
-    };
-
-
-    // --- ESTILOS (Mantidos) ---
-
-    const styles = useMemo(() => ({
-        container: { 
-            padding: isMobile ? "1rem" : "2rem", 
-            maxWidth: "1200px", 
-            margin: "0 auto", 
-            backgroundColor: LIGHT_BACKGROUND, 
-            minHeight: '100vh',
-        },
-        header: { 
-            display: "flex", 
-            flexDirection: isMobile ? "column" : "row", 
-            justifyContent: "space-between", 
-            alignItems: isMobile ? "stretch" : "center", 
-            marginBottom: "1.5rem", 
-            paddingBottom: "0.5rem",
-        },
-        navButtons: { 
-            display: "flex", 
-            flexWrap: "wrap", 
-            gap: "0.5rem", 
-            justifyContent: isMobile ? "center" : "flex-end" 
-        },
-        navButton: (active) => ({ 
-            padding: isMobile ? "0.4rem 0.8rem" : "0.5rem 1rem",
-            borderRadius: "9999px", 
-            border: `2px solid ${PRIMARY_COLOR}`, 
-            background: active ? PRIMARY_COLOR : 'transparent', 
-            color: active ? CARD_BACKGROUND : PRIMARY_COLOR, 
-            cursor: "pointer", 
-            fontWeight: "700", 
-            flex: isMobile ? "1" : "none", 
-            textAlign: "center",
-            fontSize: isMobile ? "0.8rem" : "1rem", 
-            transition: 'all 0.3s',
-        }),
-        jobsGrid: { 
-            display: "grid", 
-            gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(350px, 1fr))", 
-            gap: "1.5rem", 
-            marginTop: "1rem",
-        },
-        jobCard: (isApplied) => ({ 
-            border: `1px solid ${isApplied ? SUCCESS_COLOR : BORDER_COLOR}`, 
-            borderRadius: "1.5rem", 
-            padding: isMobile ? "1rem" : "1.5rem", 
-            background: isApplied ? SUCCESS_BACKGROUND : CARD_BACKGROUND, 
-            boxShadow: SHADOW_LIGHT, 
-            cursor: 'pointer',
-            transition: 'transform 0.2s',
-            position: 'relative',
-        }),
-        detailButton: {
-            background: 'none',
-            border: `1px solid ${PRIMARY_COLOR}`,
-            color: PRIMARY_COLOR,
-            borderRadius: "9999px",
-            padding: '0.5rem 1rem',
-            fontWeight: '600',
-            cursor: 'pointer',
-            marginTop: '1rem',
-        },
-        filterSelect: { 
-            padding: "0.75rem", 
-            borderRadius: "9999px", 
-            border: `1px solid ${BORDER_COLOR}`, 
-            marginBottom: "1.5rem", 
-            width: isMobile ? "100%" : "300px", 
-            textAlign: "left", 
-            backgroundColor: CARD_BACKGROUND,
-            color: FONT_COLOR_DARK, 
-            fontWeight: '500',
-        },
-        detailText: {
-            display: 'flex',
-            alignItems: 'center',
-            margin: '0.5rem 0',
-            fontSize: isMobile ? '0.85rem' : '0.95rem',
-            color: FONT_COLOR_DARK, 
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-        },
-        iconStyle: {
-            marginRight: "0.5rem",
-            color: PRIMARY_COLOR,
-            fontSize: '1.2rem',
-        },
-
-        // --- ESTILOS DOS MODAIS ---
-
-        modalOverlay: { 
-            position: "fixed", 
-            top: 0, 
-            left: 0, 
-            width: "100vw", 
-            height: "100vh", 
-            backgroundColor: "rgba(26, 26, 26, 0.9)", 
-            display: "flex", 
-            justifyContent: "center", 
-            alignItems: "center", 
-            zIndex: 1000, 
-            padding: "1rem",
-            overflowY: 'auto', 
-        },
-        modalContent: { 
-            backgroundColor: CARD_BACKGROUND, 
-            padding: isMobile ? "1.2rem" : "2rem",
-            borderRadius: "1.5rem", 
-            boxShadow: "0 10px 30px rgba(0,0,0,0.4)", 
-            width: "100%", 
-            maxWidth: "600px", 
-            display: "flex", 
-            flexDirection: "column", 
-            gap: "1rem",
-            position: 'relative',
-            margin: '2rem 0',
-            maxHeight: isMobile ? '90vh' : 'auto', 
-            overflowY: 'auto', 
-            boxSizing: 'border-box',
-        },
-        input: { 
-            padding: "0.75rem", 
-            border: `1px solid ${BORDER_COLOR}`, 
-            borderRadius: "9999px", 
-            color: FONT_COLOR_DARK,
-            width: '100%', 
-            boxSizing: 'border-box',
-        },
-        textarea: {
-            padding: "0.75rem", 
-            border: `1px solid ${BORDER_COLOR}`, 
-            borderRadius: "1rem",
-            color: FONT_COLOR_DARK,
-            minHeight: '100px',
-            resize: 'vertical',
-            width: '100%',
-            boxSizing: 'border-box',
-        },
-        twoColumn: {
-            display: 'flex',
-            gap: '0.75rem',
-            flexDirection: isMobile ? 'column' : 'row',
-        },
-        buttonRow: { 
-            display: "flex", 
-            flexWrap: 'wrap', 
-            flexDirection: isMobile ? "column" : "row", 
-            gap: "0.75rem", 
-            marginTop: '0.5rem' 
-        },
-        primaryBtn: (active) => ({ 
-            flex: isMobile ? 'none' : 1, 
-            width: isMobile ? '100%' : 'auto', 
-            background: SUCCESS_COLOR, 
-            color: CARD_BACKGROUND, 
-            border: "none", 
-            borderRadius: "9999px", 
-            padding: "0.75rem 1rem", 
-            cursor: "pointer", 
-            fontWeight: "700", 
-            transition: 'background-color 0.2s',
-            whiteSpace: 'nowrap',
-        }),
-        secondaryBtn: (active) => ({ 
-             flex: isMobile ? 'none' : 1,
-             width: isMobile ? '100%' : 'auto',
-             background: active ? PRIMARY_COLOR : BORDER_COLOR, 
-             color: active ? CARD_BACKGROUND : FONT_COLOR_DARK, 
-             border: 'none',
-             borderRadius: "9999px", 
-             padding: "0.75rem 1rem", 
-             cursor: "pointer", 
-             fontWeight: "700",
-             transition: 'background-color 0.2s',
-             whiteSpace: 'nowrap',
-        }),
-        deleteBtn: {
-            flex: isMobile ? 'none' : 1, 
-            width: isMobile ? '100%' : 'auto',
-            background: CANCEL_COLOR, 
-            color: CARD_BACKGROUND, 
-            border: "none", 
-            borderRadius: "9999px", 
-            padding: "0.75rem 1rem", 
-            cursor: "pointer", 
-            fontWeight: "700", 
-            transition: 'background-color 0.2s',
-            whiteSpace: 'nowrap',
-        }
-    }), [isMobile]);
-
-    // =========================================================================
-    // 3. COMPONENTE INTERNO: MODAL DE NOVA VAGA 
-    // =========================================================================
-
-    const NewJobModal = ({ onClose }) => {
-        const [newJob, setNewJob] = useState({
-            ...INITIAL_NEW_JOB_STATE,
-            company: profileData?.nome || user?.displayName || '',
-            empresaNome: profileData?.nome || user?.displayName || 'Empresa Desconhecida',
-            deficiencia: TIPOS_DEFICIENCIA_MODAL[0].toLowerCase(), 
-            ramo: RAMOS_ATUACAO[0],
-            experience: EXPERIENCIA_OPCOES[0],
-            modalidade: MODALIDADES[0],
-            salary: "", 
-        });
-        
-        const handleChange = (e) => {
-            const { name, value } = e.target;
-            setNewJob(prev => ({ ...prev, [name]: value }));
-        };
-        
-        const isFieldValid = (value) => {
-            if (value === null || value === undefined) return false;
-            if (typeof value === 'string') {
-                return value.trim().length > 0;
-            }
-            return !!value; 
-        };
-
-        const handleAddJob = async () => {
-            const requiredFields = [
-                'title', 'location', 'deficiencia', 'description', 
-                'ramo', 'experience', 'modalidade'
-            ];
-            
-            const isFormValid = requiredFields.every(field => isFieldValid(newJob[field]));
-
-            if (!isFormValid) {
-                alert("Por favor, preencha todos os campos obrigatórios.");
-                return;
-            }
-
-            try {
-                await addDoc(collection(db, "vagas"), {
-                    ...newJob,
-                    deficiencia: newJob.deficiencia.toLowerCase(),
-                    empresaUid: user.uid,
-                    postedAt: serverTimestamp(),
-                });
-                onClose();
-            } catch (e) {
-                console.error("Erro ao adicionar documento: ", e);
-                alert("Erro ao publicar vaga. Tente novamente.");
-            }
-        };
-
-        return (
-            <div style={styles.modalOverlay}>
-                <div style={styles.modalContent}>
-                    <button onClick={onClose} style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', color: FONT_COLOR_DARK }}>
-                        <FiX size={20} />
-                    </button>
-                    <h2 style={{ textAlign: "center", color: PRIMARY_COLOR, marginBottom: '1rem' }}><FiPlus style={{marginRight: '0.5rem'}}/> Publicar Nova Vaga</h2>
-                    
-                    <input style={styles.input} type="text" name="title" placeholder="Título da Vaga (Ex: Desenvolvedor Front-end)" value={newJob.title} onChange={handleChange} />
-                    <input style={styles.input} type="text" name="company" placeholder="Nome da Empresa (Pré-preenchido)" value={newJob.company} onChange={handleChange} disabled />
-                    
-                    <div style={styles.twoColumn}>
-                        <input style={styles.input} type="text" name="location" placeholder="Localização (Ex: SP/RJ)" value={newJob.location} onChange={handleChange} />
-                        <input style={styles.input} type="text" name="salary" placeholder="Salário (Ex: R$ 3.500 - 5.000 ou A Combinar)" value={newJob.salary} onChange={handleChange} />
-                    </div>
-
-                    <textarea style={styles.textarea} name="description" placeholder="Descrição completa da vaga, responsabilidades e requisitos..." value={newJob.description} onChange={handleChange}></textarea>
-
-                    <div style={styles.twoColumn}>
-                        <select style={styles.input} name="ramo" value={newJob.ramo} onChange={handleChange}>
-                            {RAMOS_ATUACAO.map(ramo => (<option key={ramo} value={ramo}>{ramo}</option>))}
-                        </select>
-                        <select style={styles.input} name="experience" value={newJob.experience} onChange={handleChange}>
-                            {EXPERIENCIA_OPCOES.map(exp => (<option key={exp} value={exp}>{exp}</option>))}
-                        </select>
-                    </div>
-                    
-                    <div style={styles.twoColumn}>
-                        <select style={styles.input} name="modalidade" value={newJob.modalidade} onChange={handleChange}>
-                            {MODALIDADES.map(mod => (<option key={mod} value={mod}>{mod}</option>))}
-                        </select>
-                        <select style={styles.input} name="deficiencia" value={newJob.deficiencia} onChange={handleChange}>
-                            {TIPOS_DEFICIENCIA_MODAL.map(tipo => (
-                                <option key={tipo} value={tipo.toLowerCase()}>{tipo === 'Qualquer' ? 'Qualquer Pessoa/Público Geral' : tipo}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div style={styles.buttonRow}>
-                        <button style={styles.primaryBtn(false)} onClick={handleAddJob}>Publicar Vaga</button>
-                        <button style={styles.secondaryBtn(false)} onClick={onClose}>Cancelar</button>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-
-    // =========================================================================
-    // 4. COMPONENTE INTERNO: MODAL DE DETALHES DA VAGA
-    // =========================================================================
-
-    const JobDetailModal = ({ job, onClose }) => {
-        const isApplied = appliedJobs.some((j) => j.id === job.id);
-        const isSaved = savedJobs.some((j) => j.id === job.id);
-        const postedAtDate = job.postedAt?.toDate ? job.postedAt.toDate() : new Date();
-
-        const isJobOwner = isEmpresa && user && job.empresaUid === user.uid;
-
-        return (
-            <div style={styles.modalOverlay}>
-                <div style={styles.modalContent}>
-                    <button onClick={onClose} style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', color: FONT_COLOR_DARK }}>
-                        <FiX size={20} />
-                    </button>
-                    
-                    <h2 style={{ 
-                        color: PRIMARY_COLOR, 
-                        marginBottom: '0.5rem', 
-                        borderBottom: `2px solid ${BORDER_COLOR}`, 
-                        paddingBottom: '0.5rem',
-                        fontSize: isMobile ? '1.2rem' : '1.5rem',
-                    }}>
-                        {job.title}
-                        {isApplied && <span style={{fontSize: '0.8rem', marginLeft: '0.5rem', padding: '0.2rem 0.5rem', borderRadius: '4px', background: SUCCESS_COLOR, color: 'white'}}>Candidatado</span>}
-                    </h2>
-                    <h3 style={{ margin: '0 0 1rem 0', color: FONT_COLOR_DARK, fontSize: isMobile ? '1rem' : '1.2rem' }}>{job.company || job.empresaNome}</h3>
-                    
-                    <div style={{ 
-                        display: 'grid', 
-                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))',
-                        gap: '1rem', 
-                        marginBottom: '1.5rem' 
-                    }}>
-                        <p style={styles.detailText}><FiMapPin style={styles.iconStyle} /> **Localização:** {job.location}</p>
-                        <p style={styles.detailText}><FiGlobe style={styles.iconStyle} /> **Modalidade:** {job.modalidade || 'Não Informado'}</p>
-                        <p style={styles.detailText}><FiLayers style={styles.iconStyle} /> **Ramo:** {job.ramo || 'Não Informado'}</p>
-                        <p style={styles.detailText}><FiZap style={styles.iconStyle} /> **Experiência:** {job.experience || 'Não Informado'}</p>
-                        <p style={styles.detailText}><FiDollarSign style={styles.iconStyle} /> **Salário:** {job.salary || 'A Negociar'}</p>
-                        <p style={styles.detailText}><FiTarget style={styles.iconStyle} /> **Público Alvo:** {formatDeficiencia(job.deficiencia)}</p>
-                        <p style={styles.detailText}><FiCalendar style={styles.iconStyle} /> **Publicada:** {postedAtDate.toLocaleDateString("pt-BR")}</p>
-                    </div>
-                    
-                    <h4 style={{ color: PRIMARY_COLOR, borderTop: `1px solid ${BORDER_COLOR}`, paddingTop: '1rem', marginTop: '0' }}>Descrição da Vaga</h4>
-                    <p style={{ whiteSpace: 'pre-wrap', color: FONT_COLOR_DARK, fontSize: '0.9rem', wordWrap: 'break-word' }}>{job.description || 'Nenhuma descrição fornecida.'}</p>
-
-                    <div style={{...styles.buttonRow, marginTop: '2rem'}}>
-                        {isCandidato && (
-                            <>
-                                <button onClick={() => handleApply(job)} style={styles.primaryBtn(isApplied)}>
-                                    {isApplied ? <><FiX style={{ marginRight: "0.3rem" }} /> Candidatura Enviada (Cancelar)</> : <><FiFileText style={{ marginRight: "0.3rem" }}/> Candidatar-se</>}
-                                </button>
-                                <button onClick={() => handleSave(job)} style={styles.secondaryBtn(isSaved)}>
-                                    <FiBookmark style={{ marginRight: "0.3rem" }} /> {isSaved ? "Remover dos Salvos" : "Salvar Vaga"}
-                                </button>
-                            </>
-                        )}
-                        
-                        {isJobOwner && (
-                            <>
-                                <button onClick={() => handleDeleteJob(job)} style={styles.deleteBtn}>
-                                    <FiTrash2 style={{ marginRight: "0.3rem" }} /> Excluir Vaga
-                                </button>
-                                <button onClick={onClose} style={styles.secondaryBtn(false)}>
-                                    Fechar
-                                </button>
-                            </>
-                        )}
-
-                        {!isCandidato && !isJobOwner && (
-                             <button onClick={onClose} style={styles.secondaryBtn(false)}>
-                                Fechar
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-
-    // =========================================================================
-    // 5. RENDERIZAÇÃO DO JOBS
-    // =========================================================================
 
     return (
-        <>
-        <section style={styles.container}>
-            <div style={styles.header}>
-                <h1 style={{ fontSize: isMobile ? "1.8rem" : "2.5rem", color: PRIMARY_COLOR, textAlign: isMobile ? "center" : "left", marginBottom: '0.5rem' }}>
-                    <FiBriefcase style={{ marginRight: '0.5rem' }}/> Oportunidades
-                </h1>
-                <div style={styles.navButtons}>
-                    {/* Botão de Explorar / Minhas Vagas */}
-                    <button style={styles.navButton(view === (isEmpresa ? "minhas" : "explorar") && !isEmpresa)} onClick={() => setView(isEmpresa ? "minhas" : "explorar")}>
-                        {isEmpresa ? "Minhas Vagas" : "Explorar Vagas"}
-                    </button>
-                    {isEmpresa && (
-                        <button style={styles.navButton(view === "explorar" && isEmpresa)} onClick={() => setView("explorar")}>
-                            Vagas Gerais
-                        </button>
-                    )}
-                    {isCandidato && <button style={styles.navButton(view === "candidatadas")} onClick={() => setView("candidatadas")}>Candidatadas</button>}
-                    {isCandidato && <button style={styles.navButton(view === "salvas")} onClick={() => setView("salvas")}>Salvas</button>}
-                    {isEmpresa && <button style={styles.navButton(isModalOpen)} onClick={() => setIsModalOpen(true)}><FiPlus /> Nova Vaga</button>}
-                </div>
+      <div style={{position:"fixed",top:0,left:0,width:"100vw",height:"100vh",background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:999, padding: isMobile ? 10 : 0}}>
+        <div style={modalContentStyle}>
+          <button onClick={onClose} style={{float:"right",background:"none",border:"none", fontSize:24, color:COLORS.dark, cursor:"pointer"}}><FiX/></button>
+          
+          {/* Foto perfil */}
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+            {job.fotoPerfil && <img src={job.fotoPerfil} alt="Perfil" style={{width:60,height:60,borderRadius:"50%",objectFit:"cover"}} />}
+            <div>
+              <h3 style={{color:COLORS.primary,fontSize:isMobile?22:28,margin:0}}>{job.title} {isApplied && <span style={{background:COLORS.success,color:"#fff",padding:"2px 6px",borderRadius:6,marginLeft:8, fontSize: isMobile ? 12 : 14}}>Candidatado</span>}</h3>
+              <h4 style={{marginTop:4, color: COLORS.dark, fontSize: isMobile ? 16 : 18}}>{job.company || job.empresaNome}</h4>
             </div>
-            
-            {/* SELETOR DE FILTRO */}
-            {view === 'explorar' && !isEmpresa && (
-                <select 
-                    style={styles.filterSelect} 
-                    onChange={(e) => setFilterDeficiencia(e.target.value)} 
-                    value={filterDeficiencia}
-                >
-                    <option value="todas">Mostrar vagas para qualquer pessoa</option>
-                    <optgroup label="Filtrar por Deficiência Específica">
-                        {TIPOS_DEFICIENCIA_MODAL
-                            .filter(t => t !== 'Qualquer')
-                            .map(tipo => (
-                            <option key={tipo} value={tipo.toLowerCase()}>{tipo}</option>
-                        ))}
-                    </optgroup>
-                </select>
-            )}
-
-            <div style={styles.jobsGrid}>
-                {displayedJobs.length === 0 ? (
-                    <p style={{ textAlign: "center", color: FONT_COLOR_DARK, gridColumn: "1 / -1", padding: '2rem', backgroundColor: CARD_BACKGROUND, borderRadius: '1rem', boxShadow: SHADOW_LIGHT }}>Nenhuma vaga encontrada nesta visualização ou com os filtros.</p>
-                ) : (
-                    displayedJobs.map((job) => {
-                        const isApplied = appliedJobs.some((j) => j.id === job.id);
-                        const isSaved = savedJobs.some((j) => j.id === job.id);
-
-                        return (
-                            <div key={job.id} style={styles.jobCard(isApplied)} onClick={() => setSelectedJob(job)}>
-                                <h3 style={{ margin: 0, color: PRIMARY_COLOR, fontSize: '1.25rem' }}>{job.title}</h3>
-                                <p style={{ color: FONT_COLOR_DARK, margin: '0.25rem 0 1rem 0', fontWeight: 'bold' }}>{job.company || job.empresaNome}</p>
-                                
-                                <div style={styles.detailText}>
-                                    <FiMapPin style={styles.iconStyle} /> {job.location} ({job.modalidade || 'Não Informado'})
-                                </div>
-                                <div style={styles.detailText}>
-                                    <FiDollarSign style={styles.iconStyle} /> {job.salary || 'Salário: A Negociar'}
-                                </div>
-                                <div style={styles.detailText}>
-                                    <FiTarget style={styles.iconStyle} /> Público Alvo: **{formatDeficiencia(job.deficiencia)}**
-                                </div>
-                                
-                                <button style={styles.detailButton} onClick={(e) => { e.stopPropagation(); setSelectedJob(job); }}>
-                                    <FiEdit3 style={{marginRight: '0.5rem'}}/> Ver Detalhes
-                                </button>
-                                
-                                {isCandidato && (
-                                    <div style={{...styles.buttonRow, marginTop: '0.5rem'}}>
-                                        <button onClick={(e) => { e.stopPropagation(); handleApply(job); }} style={styles.primaryBtn(isApplied)}>
-                                            {isApplied ? "Cancelar" : "Candidatar"}
-                                        </button>
-                                        <button onClick={(e) => { e.stopPropagation(); handleSave(job); }} style={styles.secondaryBtn(isSaved)}>
-                                            <FiBookmark /> {isSaved ? "Remover" : "Salvar"}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })
-                )}
-            </div>
-        </section>
-
-        {/* MODAL DE CRIAÇÃO DE VAGA */}
-        {isEmpresa && isModalOpen && <NewJobModal onClose={() => setIsModalOpen(false)} />}
-
-        {/* MODAL DE DETALHES DA VAGA */}
-        {selectedJob && <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />}
-        </>
+          </div>
+          
+          <div style={{display:"grid", gridTemplateColumns:isMobile?"1fr":"repeat(3,1fr)", gap: isMobile ? 10 : 15, marginTop:15, paddingBottom: 10, borderBottom: `1px solid ${COLORS.border}`}}>
+            <div><FiMapPin/> <strong>Local:</strong> {job.location}</div>
+            <div><FiGlobe/> <strong>Modalidade:</strong> {job.modalidade||"Não Informado"}</div>
+            <div><FiZap/> <strong>Exp.:</strong> {job.experience||"Não Informado"}</div>
+            <div><FiDollarSign/> <strong>Salário:</strong> {job.salary||"A Negociar"}</div>
+            <div><FiTarget/> <strong>Público:</strong> {formatDef(job.deficiencia)}</div>
+            <div><FiCalendar/> <strong>Publicada:</strong> {posted.toLocaleDateString("pt-BR")}</div>
+          </div>
+          
+          <h4 style={{marginTop: isMobile ? 15 : 20, color:COLORS.primary, borderLeft:`4px solid ${COLORS.primary}`, paddingLeft: 8}}>Descrição</h4>
+          <p style={{whiteSpace:"pre-wrap", lineHeight: 1.6}}>{job.description||"Nenhuma descrição fornecida."}</p>
+          
+          <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop: isMobile ? 15 : 20, paddingTop: isMobile ? 10 : 15, borderTop: `1px solid ${COLORS.border}`}}>
+            {isCandidato && <>
+              <button onClick={()=>handleApply(job)} style={{padding:"10px 16px",background:COLORS.success,color:"#fff",border:"none",borderRadius:999, fontWeight: 700, cursor: "pointer", transition: "all 0.3s"}}>{isApplied? "Cancelar Candidatura":"Candidatar-se"}</button>
+              <button onClick={()=>handleSave(job)} style={{padding:"10px 16px",border:`1px solid ${COLORS.primary}`, background: isSaved ? COLORS.primary : "transparent", color: isSaved ? "#fff" : COLORS.primary, borderRadius:999, fontWeight: 700, cursor: "pointer", transition: "all 0.3s"}}>{isSaved? "Remover dos Salvos":"Salvar Vaga"}</button>
+            </>}
+            {isOwner && <>
+              <button onClick={()=>handleDeleteJob(job)} style={{padding:"10px 16px",background:COLORS.cancel,color:"#fff",border:"none",borderRadius:999, fontWeight: 700, cursor: "pointer", transition: "all 0.3s"}}>Excluir Vaga</button>
+              <button onClick={onClose} style={{padding:"10px 16px",background:COLORS.border, border:"none", borderRadius:999, fontWeight: 700, cursor: "pointer", transition: "all 0.3s"}}>Fechar</button>
+            </>}
+            {!isCandidato && !isOwner && <button onClick={onClose} style={{padding:"10px 16px",background:COLORS.border, border:"none", borderRadius:999, fontWeight: 700, cursor: "pointer", transition: "all 0.3s"}}>Fechar</button>}
+          </div>
+        </div>
+      </div>
     );
+ };
+
+  /* -------------------------
+     Render
+  ------------------------- */
+  return (
+    <>
+      <Toaster position="top-center" />
+      <section style={styles.container}>
+        <div style={styles.header}>
+          <h1 style={{fontSize:isMobile?22:28,color:COLORS.primary}}><FiBriefcase/> Oportunidades</h1>
+          <div style={styles.navButtons}>
+            <button style={styles.navButton(view==="explorar" && !isEmpresa)} onClick={()=>setView("explorar")}>Explorar Vagas</button>
+            {isEmpresa && <button style={styles.navButton(view==="minhas" && isEmpresa)} onClick={()=>setView("minhas")}>Minhas Vagas</button>}
+            {isCandidato && <button style={styles.navButton(view==="candidatadas")} onClick={()=>setView("candidatadas")}>Candidatadas</button>}
+            {isCandidato && <button style={styles.navButton(view==="salvas")} onClick={()=>setView("salvas")}>Salvas</button>}
+            {isEmpresa && <button style={styles.navButton(isModalOpen)} onClick={()=>setIsModalOpen(true)}><FiPlus/> Nova Vaga</button>}
+          </div>
+        </div>
+
+        {view==="explorar" && !isEmpresa && (
+          <select style={{padding:10,borderRadius:999,border:`1px solid ${COLORS.border}`,marginBottom:12}} value={filterDef} onChange={(e)=>setFilterDef(e.target.value)}>
+            <option value="todas">Mostrar vagas para qualquer pessoa</option>
+            <optgroup label="Filtrar por Deficiência Específica">
+              {TIPOS_DEF.filter(t=>t!=="Qualquer").map(t=> <option key={t} value={t.toLowerCase()}>{t}</option>)}
+            </optgroup>
+          </select>
+        )}
+
+        <div style={styles.jobsGrid}>
+          {displayed.length===0
+            ? <p style={{gridColumn:"1/-1",textAlign:"center",padding:24,background:COLORS.card,borderRadius:12,boxShadow:"0 6px 10px rgba(0,0,0,0.06)"}}>Nenhuma vaga encontrada.</p>
+            : displayed.map(job=>{
+              const isApplied = appliedJobs.some(j=>j.id===job.id);
+              const isSaved = savedJobs.some(j=>j.id===job.id);
+              return (
+                <div key={job.id} style={styles.jobCard(isApplied)} onClick={()=>setSelectedJob(job)}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                    {job.fotoPerfil && <img src={job.fotoPerfil} alt="Perfil" style={{width:40,height:40,borderRadius:"50%",objectFit:"cover"}} />}
+                    <div>
+                      <h3 style={{margin:0,color:COLORS.primary}}>{job.title}</h3>
+                      <p style={{margin:"2px 0 0 0",fontWeight:700}}>{job.company || job.empresaNome}</p>
+                    </div>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                    <div><FiMapPin/> {job.location} ({job.modalidade||"Não Informado"})</div>
+                    <div><FiDollarSign/> {job.salary || "A Negociar"}</div>
+                    <div><FiTarget/> Público Alvo: <strong>{formatDef(job.deficiencia)}</strong></div>
+                  </div>
+                  <button style={styles.detailButton} onClick={(e)=>{ e.stopPropagation(); setSelectedJob(job); }}> <FiEdit3/> Ver Detalhes</button>
+
+                  {isCandidato && <div style={{...styles.buttonRow}}>
+                    <button onClick={(e)=>{e.stopPropagation(); handleApply(job);}} style={styles.primaryBtn(isApplied)}>{isApplied? "Cancelar":"Candidatar"}</button>
+                    <button onClick={(e)=>{e.stopPropagation(); handleSave(job);}} style={styles.secondaryBtn(isSaved)}>{isSaved? "Remover":"Salvar"}</button>
+                  </div>}
+                </div>
+              );
+            })}
+        </div>
+      </section>
+
+      {isEmpresa && isModalOpen && <NewJobModal onClose={()=>setIsModalOpen(false)} />}
+      {selectedJob && <JobDetailModal job={selectedJob} onClose={()=>setSelectedJob(null)} />}
+    </>
+  );
 }
