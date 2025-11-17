@@ -12,9 +12,7 @@ import { db } from "../services/firebase";
 import useAuthStore from "../store/useAuth";
 import { Toaster, toast } from "react-hot-toast";
 
-/* -------------------------
-  Constantes e dados
-------------------------- */
+/* paleta e dados */
 const COLORS = {
   primary: "#CF0908",
   dark: "#1A1A1A",
@@ -26,14 +24,12 @@ const COLORS = {
   successBg: "#E6FFFA"
 };
 const RAMOS = ["Tecnologia","Saúde","Finanças","Educação","Varejo","Serviços","Indústria","Outro"];
-const EXPERIENCIA = ["Estágio","Júnior","Pleno","Sênior","Especialista"];
+const EXPERIENCIA = ["Jovem Aprendiz", "Estágio","Júnior","Pleno","Sênior","Especialista"];
 const MODALIDADES = ["Remoto","Presencial","Híbrido"];
 const TIPOS_DEF = ["Visual","Auditiva","Fisica","Intelectual","Múltipla","Outra","Qualquer"];
 const INITIAL_JOB = { title:"", company:"", location:"", deficiencia:"", description:"", salary:"", ramo:"", experience:"", modalidade:"", empresaNome:"", fotoPerfil:"" };
 
-/* -------------------------
-  Componente Jobs
-------------------------- */
+
 export default function Jobs(){
   const { user, profileData } = useAuthStore();
   const isEmpresa = profileData?.tipoUsuario === "empresa";
@@ -49,7 +45,7 @@ export default function Jobs(){
   const [w, setW] = useState(window.innerWidth);
   const isMobile = w < 768;
 
-  // snapshot vagas
+  // vagas salvas
   useEffect(()=>{
     const q = query(collection(db,"vagas"), orderBy("postedAt","desc"));
     const unsub = onSnapshot(q, s=>{
@@ -58,7 +54,7 @@ export default function Jobs(){
     return () => unsub();
   },[]);
 
-  // carregar applied/saved por usuário
+  
   useEffect(()=>{
     if (!user?.uid){ setAppliedJobs([]); setSavedJobs([]); return; }
     try {
@@ -68,11 +64,8 @@ export default function Jobs(){
     } catch (e){ console.error("Erro localStorage:", e); setAppliedJobs([]); setSavedJobs([]); }
   },[user]);
 
-  // persist applied
   useEffect(()=>{ if (!user?.uid) return; try{ localStorage.setItem(`appliedJobs_${user.uid}`, JSON.stringify(appliedJobs)); }catch(e){console.error(e);} },[appliedJobs,user]);
-  // persist saved
   useEffect(()=>{ if (!user?.uid) return; try{ localStorage.setItem(`savedJobs_${user.uid}`, JSON.stringify(savedJobs)); }catch(e){console.error(e);} },[savedJobs,user]);
-
   useEffect(()=>{ const handleResize=()=>setW(window.innerWidth); window.addEventListener("resize",handleResize); return ()=>window.removeEventListener("resize",handleResize); },[]);
 
   const formatDef = d=>{
@@ -89,7 +82,7 @@ export default function Jobs(){
     catch(e){ console.error(e); toast.error("Erro ao excluir vaga."); }
   };
 
-  // candidatura: salva por usuário e envia notificação só para empresa dona da vaga
+  // manda a candidatura pra empresa da vaga
   const handleApply = async(job)=>{
     if(!user?.uid || !isCandidato){ toast.error("Faça login como candidato para se candidatar."); return; }
     if(job.empresaUid === user.uid){ toast.error("Empresas não podem se candidatar às próprias vagas."); return; }
@@ -141,9 +134,7 @@ export default function Jobs(){
 
   const displayed = getFilteredJobs();
 
-  /* -------------------------
-     Estilos compactos (mantive visual)
-  ------------------------- */
+  /* estilos */
   const styles = useMemo(()=>({
     container:{ padding:isMobile?"1rem":"2rem", maxWidth:1200, margin:"0 auto", background:COLORS.lightBg, minHeight:"100vh" },
     header:{ display:"flex", flexDirection:isMobile?"column":"row", justifyContent:"space-between", alignItems:isMobile?"stretch":"center", marginBottom:16 },
@@ -157,9 +148,7 @@ export default function Jobs(){
     secondaryBtn:(active)=>({ background: active?COLORS.primary:COLORS.border, color: active?"#fff":COLORS.dark, border:"none", padding:"8px 12px", borderRadius:999, cursor:"pointer" })
   }),[isMobile]);
 
-  /* -------------------------
-     Modal de criar vaga (compacto)
-  ------------------------- */
+  /* criar vaga */
   const NewJobModal = ({onClose})=>{
     const [newJob, setNewJob] = useState({...INITIAL_JOB, company: profileData?.nome||user?.displayName||"", empresaNome: profileData?.nome||user?.displayName||"Empresa Desconhecida", deficiencia:TIPOS_DEF[0].toLowerCase(), ramo:RAMOS[0], experience:EXPERIENCIA[0], modalidade:MODALIDADES[0]} );
     const change = e=> setNewJob(p=>({...p,[e.target.name]: e.target.value}));
@@ -196,9 +185,7 @@ export default function Jobs(){
     );
   };
 
- /* -------------------------
-    Job detail modal atualizado com foto
- ------------------------- */
+ /* tentando fazer foto aparecer na vaga */
  const JobDetailModal = ({job,onClose})=>{
     const isApplied = appliedJobs.some(j=>j.id===job.id);
     const isSaved = savedJobs.some(j=>j.id===job.id);
@@ -259,9 +246,7 @@ export default function Jobs(){
     );
  };
 
-  /* -------------------------
-     Render
-  ------------------------- */
+
   return (
     <>
       <Toaster position="top-center" />
