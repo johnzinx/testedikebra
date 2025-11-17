@@ -24,7 +24,7 @@ const COLORS = {
   successBg: "#E6FFFA"
 };
 const RAMOS = ["Tecnologia","Saúde","Finanças","Educação","Varejo","Serviços","Indústria","Outro"];
-const EXPERIENCIA = ["Jovem Aprendiz", "Estágio","Júnior","Pleno","Sênior","Especialista"];
+const EXPERIENCIA = ["Assistente","Jovem Aprendiz", "Estágio","Júnior","Pleno","Sênior","Especialista"];
 const MODALIDADES = ["Remoto","Presencial","Híbrido"];
 const TIPOS_DEF = ["Visual","Auditiva","Fisica","Intelectual","Múltipla","Outra","Qualquer"];
 const INITIAL_JOB = { title:"", company:"", location:"", deficiencia:"", description:"", salary:"", ramo:"", experience:"", modalidade:"", empresaNome:"", fotoPerfil:"" };
