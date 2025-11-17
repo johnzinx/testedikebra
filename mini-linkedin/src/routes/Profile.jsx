@@ -210,7 +210,7 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
         uid: usuarioLogado.uid,
       };
 
-      // Lógica de limpeza de dados permanece a mesma
+      // Lógica de limpeza de dados
       if (dadosParaSalvar.tipoUsuario === 'pcd') {
         dadosParaSalvar = { 
           ...dadosParaSalvar, 
@@ -219,12 +219,12 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
       } else if (dadosParaSalvar.tipoUsuario === 'empresa') {
         dadosParaSalvar = { 
           ...dadosParaSalvar, 
-          cpf: "", dataNascimento: "", deficiencia: "", tipoDeficiencia: "", telefone: "", curriculoURL: "" // Limpa curriculo para não-PCD
+          cpf: "", dataNascimento: "", deficiencia: "", tipoDeficiencia: "", telefone: "", curriculoURL: "" // Limpa curriculo para Empresa
         };
       } else if (dadosParaSalvar.tipoUsuario === 'Usuário Individual') {
         dadosParaSalvar = { 
           ...dadosParaSalvar, 
-          cnpj: "", razaoSocial: "", deficiencia: "", tipoDeficiencia: "", curriculoURL: "" // Limpa curriculo para não-PCD
+          cnpj: "", razaoSocial: "", deficiencia: "", tipoDeficiencia: "" // MANTÉM curriculoURL e telefone para Usuário Individual
         };
       }
 
@@ -308,7 +308,7 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
                   </div>
                 )}
 
-                {/* NOVO: Botão de Visualizar Currículo */}
+                {/* NOVO: Botão de Visualizar Currículo - Mantido para PCD */}
                 {perfil.curriculoURL && (
                   <a 
                     href={perfil.curriculoURL} 
@@ -334,7 +334,7 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
               </>
             )}
 
-            {/* USUaRIO INDIVIDUAL */}
+            {/* USURIO INDIVIDUAL (COM CURRÍCULO) */}
             {perfil.tipoUsuario === 'Usuário Individual' && (
               <>
                 <div style={viewItemStyle}>
@@ -343,6 +343,17 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
                 <div style={viewItemStyle}>
                   Data de nascimento: {perfil.dataNascimento || 'Não informada'}
                 </div>
+                {/* NOVO: Botão de Visualizar Currículo para Usuário Individual */}
+                {perfil.curriculoURL && (
+                  <a 
+                    href={perfil.curriculoURL} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    style={linkButtonStyle}
+                  >
+                    📄 Visualizar Currículo
+                  </a>
+                )}
               </>
             )}
           </div>
@@ -391,7 +402,7 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
             <input 
               type="tel" 
               name="telefone" 
-              placeholder="Telefone (obrigatório para PCD)" 
+              placeholder="Telefone" 
               value={perfil.telefone} 
               onChange={handleChange} 
               style={inputStyle} 
@@ -424,7 +435,41 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
                   )}
                 </select>
 
-                {/* NOVO: Campo de Upload de Currículo */}
+                {/* NOVO: Campo de Upload de Currículo - Mantido para PCD */}
+                <div style={{ border: `1px solid ${BORDER_COLOR}`, borderRadius: '9999px', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', backgroundColor: LIGHT_BACKGROUND }}>
+                  <label style={{ fontWeight: 'bold', color: FONT_COLOR_DARK }}>
+                    Enviar Currículo (PDF, DOCX)
+                  </label>
+                  <input 
+                    type="file" 
+                    accept=".pdf,.doc,.docx" 
+                    onChange={handleCurriculoFileChange} 
+                    disabled={uploading} 
+                    style={{ padding: '0.5rem', border: 'none', backgroundColor: CARD_BACKGROUND, borderRadius: '9999px' }}
+                  />
+                  <small style={{ color: FONT_COLOR_DARK, textAlign: 'center' }}>
+                    {perfil.curriculoURL ? 'Currículo atual anexado. Envie um novo para substituir.' : 'Nenhum currículo anexado.'}
+                    {curriculoArquivo && ` | Novo arquivo: ${curriculoArquivo.name}`}
+                  </small>
+                </div>
+              </>
+            )}
+
+            {/* EMPRESA */}
+            {perfil.tipoUsuario === 'empresa' && (
+              <>
+                <input type="text" name="razaoSocial" placeholder="Razão Social" value={perfil.razaoSocial} onChange={handleChange} style={inputStyle} disabled={uploading} />
+                <input type="text" name="cnpj" placeholder="CNPJ" value={perfil.cnpj} onChange={handleChange} style={inputStyle} disabled={uploading} />
+              </>
+            )}
+
+            {/* USURIO INDIVIDUAL (COM CURRÍCULO) */}
+            {perfil.tipoUsuario === 'Usuário Individual' && (
+              <>
+                <input type="text" name="cpf" placeholder="CPF" value={perfil.cpf} onChange={handleChange} style={inputStyle} disabled={uploading} />
+                <input type="date" name="dataNascimento" placeholder="Data de nascimento" value={perfil.dataNascimento} onChange={handleChange} style={inputStyle} disabled={uploading} />
+
+                {/* NOVO: Campo de Upload de Currículo para Usuário Individual */}
                 <div style={{ border: `1px solid ${BORDER_COLOR}`, borderRadius: '9999px', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', backgroundColor: LIGHT_BACKGROUND }}>
                   <label style={{ fontWeight: 'bold', color: FONT_COLOR_DARK }}>
                     Enviar Currículo (PDF, DOCX)
@@ -442,22 +487,6 @@ export default function Profile({ user: perfilUsuarioExterno = null }) {
                   </small>
                 </div>
 
-              </>
-            )}
-
-            {/* EMPRESA */}
-            {perfil.tipoUsuario === 'empresa' && (
-              <>
-                <input type="text" name="razaoSocial" placeholder="Razão Social" value={perfil.razaoSocial} onChange={handleChange} style={inputStyle} disabled={uploading} />
-                <input type="text" name="cnpj" placeholder="CNPJ" value={perfil.cnpj} onChange={handleChange} style={inputStyle} disabled={uploading} />
-              </>
-            )}
-
-            {/* USURIO INDIVIDUAL */}
-            {perfil.tipoUsuario === 'Usuário Individual' && (
-              <>
-                <input type="text" name="cpf" placeholder="CPF" value={perfil.cpf} onChange={handleChange} style={inputStyle} disabled={uploading} />
-                <input type="date" name="dataNascimento" placeholder="Data de nascimento" value={perfil.dataNascimento} onChange={handleChange} style={inputStyle} disabled={uploading} />
               </>
             )}
 
